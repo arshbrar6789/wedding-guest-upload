@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Share the Moment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest: #16261E;
+    --forest-deep: #0E1B15;
+    --brass: #C9A34E;
+    --brass-bright: #E0BE72;
+    --ivory: #F6F1E7;
+    --sage: #7C9885;
+    --clay: #B5533C;
+    --radius: 28px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--forest-deep);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    color: var(--ivory);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+    background:
+      radial-gradient(circle at 50% 0%, rgba(201,163,78,0.10), transparent 55%),
+      var(--forest);
+  }
+
+  .card {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin-bottom: 14px;
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-size: clamp(32px, 8vw, 42px);
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  .sub {
+    font-size: 15px;
+    color: var(--sage);
+    line-height: 1.5;
+    margin-bottom: 40px;
+    max-width: 320px;
+  }
+
+  /* ---- Seal buttons (landing) ---- */
+  .seal-row {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+
+  .seal-btn {
+    all: unset;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .seal {
+    width: 104px;
+    height: 104px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--brass-bright), var(--brass) 60%, #9c7c34 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      0 10px 24px rgba(0,0,0,0.35),
+      inset 0 2px 4px rgba(255,255,255,0.35),
+      inset 0 -6px 10px rgba(0,0,0,0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    position: relative;
+  }
+
+  .seal::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(22,38,30,0.35);
+  }
+
+  .seal svg {
+    width: 38px;
+    height: 38px;
+    fill: var(--forest-deep);
+    position: relative;
+    z-index: 1;
+  }
+
+  .seal-btn:active .seal {
+    transform: scale(0.94);
+    box-shadow:
+      0 4px 10px rgba(0,0,0,0.35),
+      inset 0 2px 4px rgba(255,255,255,0.25),
+      inset 0 -3px 6px rgba(0,0,0,0.3);
+  }
+
+  .seal-label {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .seal-caption {
+    font-size: 11.5px;
+    color: var(--sage);
+  }
+
+  input[type="file"] { display: none; }
+
+  /* ---- Preview state ---- */
+  .preview-box {
+    width: 100%;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--forest-deep);
+    border: 1px solid rgba(201,163,78,0.25);
+    margin-bottom: 24px;
+  }
+
+  .preview-box img, .preview-box video {
+    display: block;
+    width: 100%;
+    max-height: 55dvh;
+    object-fit: contain;
+    background: #000;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .btn {
+    all: unset;
+    cursor: pointer;
+    flex: 1;
+    text-align: center;
+    padding: 16px 0;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 15px;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: var(--brass);
+    color: var(--forest-deep);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--ivory);
+    border: 1px solid rgba(246,241,231,0.25);
+  }
+
+  .btn[disabled] { opacity: 0.5; pointer-events: none; }
+
+  /* ---- Progress ---- */
+  .progress-wrap {
+    width: 100%;
+    margin-top: 22px;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(246,241,231,0.15);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--brass);
+    border-radius: 999px;
+    transition: width 0.2s ease;
+  }
+
+  .progress-text {
+    font-size: 13px;
+    color: var(--sage);
+  }
+
+  /* ---- Success ---- */
+  .success-seal {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--brass-bright), var(--brass) 60%, #9c7c34 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 28px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.35);
+    animation: stamp 0.45s cubic-bezier(.2,1.4,.4,1);
+  }
+
+  @keyframes stamp {
+    0% { transform: scale(1.5) rotate(-8deg); opacity: 0; }
+    60% { transform: scale(0.95) rotate(2deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  .success-seal svg { width: 46px; height: 46px; fill: var(--forest-deep); }
+
+  /* ---- Error ---- */
+  .error-text {
+    color: var(--clay);
+    font-size: 14px;
+    background: rgba(181,83,60,0.12);
+    border: 1px solid rgba(181,83,60,0.35);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .hidden { display: none !important; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- LANDING -->
+  <div id="view-landing">
+    <div class="eyebrow">Arsh &amp; Meghna &middot; September 2026</div>
+    <h1>Share the<br>Moment</h1>
+    <p class="sub">Capture a photo, or a video up to 25 seconds. It'll appear on the gallery tonight.</p>
+
+    <div class="seal-row">
+      <button class="seal-btn" id="btn-photo">
+        <span class="seal">
+          <svg viewBox="0 0 24 24"><path d="M9 3l-1.6 2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.4L15 3H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>
+        </span>
+        <span class="seal-label">Photo</span>
+      </button>
+
+      <button class="seal-btn" id="btn-video">
+        <span class="seal">
+          <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+        </span>
+        <span class="seal-label">Video</span>
+      </button>
+    </div>
+    <div class="seal-caption">Video clips: 25 seconds max</div>
+
+    <input type="file" id="input-photo" accept="image/*" capture="environment">
+    <input type="file" id="input-video" accept="video/*" capture="environment">
+  </div>
+
+  <!-- ERROR (e.g. video too long) -->
+  <div id="view-error" class="hidden">
+    <div class="eyebrow">One thing first</div>
+    <h1 style="font-size: 28px;">Almost there</h1>
+    <p class="error-text" id="error-message"></p>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btn-error-retry">Try again</button>
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div id="view-preview" class="hidden">
+    <div class="eyebrow" id="preview-eyebrow">Ready to share</div>
+    <div class="preview-box" id="preview-box"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="btn-cancel">Choose different</button>
+      <button class="btn btn-primary" id="btn-upload">Share it</button>
+    </div>
+
+    <div class="progress-wrap hidden" id="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-text" id="progress-text">Uploading&hellip;</div>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="view-success" class="hidden">
+    <div class="success-seal">
+      <svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
+    </div>
+    <h1 style="font-size: 30px;">Shared</h1>
+    <p class="sub">Thank you &mdash; it'll show up in the gallery shortly.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btn-again">Add another</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ====== CONFIG ======
+  const CONFIG = {
+    // Azure Function endpoint that issues the SAS upload URL
+    SAS_FUNCTION_URL: 'https://wedding-upload-func-13457.azurewebsites.net/api/get-upload-url',
+    MAX_VIDEO_SECONDS: 25,
+  };
+  // =====================
+
+  const el = (id) => document.getElementById(id);
+
+  const views = {
+    landing: el('view-landing'),
+    error: el('view-error'),
+    preview: el('view-preview'),
+    success: el('view-success'),
+  };
+
+  function showView(name) {
+    Object.values(views).forEach(v => v.classList.add('hidden'));
+    views[name].classList.remove('hidden');
+  }
+
+  let currentFile = null;
+  let currentKind = null; // 'photo' | 'video'
+
+  // ---- Landing triggers ----
+  el('btn-photo').addEventListener('click', () => el('input-photo').click());
+  el('btn-video').addEventListener('click', () => el('input-video').click());
+
+  el('input-photo').addEventListener('change', (e) => handleFile(e.target.files[0], 'photo'));
+  el('input-video').addEventListener('change', (e) => handleFile(e.target.files[0], 'video'));
+
+  function handleFile(file, kind) {
+    if (!file) return;
+
+    if (kind === 'video') {
+      const probe = document.createElement('video');
+      probe.preload = 'metadata';
+      probe.src = URL.createObjectURL(file);
+      probe.onloadedmetadata = () => {
+        const duration = probe.duration;
+        URL.revokeObjectURL(probe.src);
+        if (duration > CONFIG.MAX_VIDEO_SECONDS + 0.5) {
+          el('error-message').textContent =
+            `That clip runs about ${Math.round(duration)} seconds — the limit here is ${CONFIG.MAX_VIDEO_SECONDS}. Please trim it or capture a shorter moment.`;
+          showView('error');
+        } else {
+          setPreview(file, kind);
+        }
+      };
+      probe.onerror = () => setPreview(file, kind); // fall back gracefully if metadata can't load
+    } else {
+      setPreview(file, kind);
+    }
+  }
+
+  el('btn-error-retry').addEventListener('click', () => {
+    el('input-video').value = '';
+    el('input-photo').value = '';
+    showView('landing');
+  });
+
+  function setPreview(file, kind) {
+    currentFile = file;
+    currentKind = kind;
+
+    const box = el('preview-box');
+    box.innerHTML = '';
+    const url = URL.createObjectURL(file);
+
+    if (kind === 'photo') {
+      const img = document.createElement('img');
+      img.src = url;
+      box.appendChild(img);
+    } else {
+      const vid = document.createElement('video');
+      vid.src = url;
+      vid.controls = true;
+      vid.playsInline = true;
+      box.appendChild(vid);
+    }
+
+    el('preview-eyebrow').textContent = kind === 'photo' ? 'Your photo' : 'Your video';
+    el('progress-wrap').classList.add('hidden');
+    el('btn-upload').disabled = false;
+    el('btn-upload').textContent = 'Share it';
+    showView('preview');
+  }
+
+  el('btn-cancel').addEventListener('click', () => {
+    currentFile = null;
+    el('input-photo').value = '';
+    el('input-video').value = '';
+    showView('landing');
+  });
+
+  el('btn-again').addEventListener('click', () => {
+    currentFile = null;
+    el('input-photo').value = '';
+    el('input-video').value = '';
+    showView('landing');
+  });
+
+  // ---- Upload flow ----
+  el('btn-upload').addEventListener('click', async () => {
+    if (!currentFile) return;
+
+    el('btn-upload').disabled = true;
+    el('btn-cancel').disabled = true;
+    el('btn-upload').textContent = 'Preparing…';
+    el('progress-wrap').classList.remove('hidden');
+    el('progress-fill').style.width = '0%';
+    el('progress-text').textContent = 'Preparing upload…';
+
+    try {
+      const ext = (currentFile.name.split('.').pop() || (currentKind === 'photo' ? 'jpg' : 'mp4')).toLowerCase();
+      const res = await fetch(`${CONFIG.SAS_FUNCTION_URL}?ext=${encodeURIComponent(ext)}`);
+      if (!res.ok) throw new Error('Could not get an upload link.');
+      const { uploadUrl } = await res.json();
+
+      el('progress-text').textContent = 'Uploading…';
+      await uploadWithProgress(uploadUrl, currentFile);
+
+      showView('success');
+    } catch (err) {
+      el('error-message').textContent =
+        'That upload didn\'t go through — check your connection and try again.';
+      showView('error');
+    } finally {
+      el('btn-upload').disabled = false;
+      el('btn-cancel').disabled = false;
+    }
+  });
+
+  function uploadWithProgress(url, file) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', url);
+      xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          el('progress-fill').style.width = pct + '%';
+          el('progress-text').textContent = `Uploading… ${pct}%`;
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error('Upload failed with status ' + xhr.status));
+      };
+      xhr.onerror = () => reject(new Error('Network error during upload.'));
+      xhr.send(file);
+    });
+  }
+</script>
+
+</body>
+</html>
