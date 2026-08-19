@@ -364,11 +364,16 @@
   /* ---- Camera view ---- */
   #view-camera {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh; /* dvh accounts for Safari's collapsing toolbar; falls back to vh above where unsupported */
     background: #000;
     z-index: 50;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
 
   .camera-top {
@@ -934,6 +939,36 @@
   let pinchStartDist = null;
   let pinchStartZoom = 1;
 
+  // ---- Block iOS Safari's native pinch/double-tap zoom while the camera is open ----
+  // Note: the viewport meta tricks (user-scalable=no, maximum-scale=1) are deliberately
+  // ignored by iOS Safari for accessibility reasons — this JS-level gesture block is the
+  // approach that actually works on iPhone.
+  function preventMultiTouchZoom(e) {
+    if (e.touches && e.touches.length > 1) e.preventDefault();
+  }
+  function preventGestureZoom(e) {
+    e.preventDefault();
+  }
+  function preventDoubleTapZoom(e) {
+    const now = Date.now();
+    if (now - (preventDoubleTapZoom._last || 0) < 350) e.preventDefault();
+    preventDoubleTapZoom._last = now;
+  }
+
+  function enableZoomBlock() {
+    document.addEventListener('touchmove', preventMultiTouchZoom, { passive: false });
+    document.addEventListener('gesturestart', preventGestureZoom, { passive: false }); // Safari-specific
+    document.addEventListener('gesturechange', preventGestureZoom, { passive: false });
+    document.addEventListener('touchend', preventDoubleTapZoom, { passive: false });
+  }
+
+  function disableZoomBlock() {
+    document.removeEventListener('touchmove', preventMultiTouchZoom);
+    document.removeEventListener('gesturestart', preventGestureZoom);
+    document.removeEventListener('gesturechange', preventGestureZoom);
+    document.removeEventListener('touchend', preventDoubleTapZoom);
+  }
+
   async function openCamera() {
     showView(null);
     el('view-camera').classList.remove('hidden');
@@ -941,6 +976,7 @@
     renderThumbStrip();
     currentZoom = 1;
     updateZoomVisual();
+    enableZoomBlock();
 
     try {
       mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -1042,6 +1078,7 @@
   });
 
   function closeCamera() {
+    disableZoomBlock();
     if (mediaStream) {
       mediaStream.getTracks().forEach(t => t.stop());
       mediaStream = null;
