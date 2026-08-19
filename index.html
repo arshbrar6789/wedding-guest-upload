@@ -664,6 +664,14 @@
     transition: all 0.2s ease;
   }
 
+  .shutter.mode-video {
+    border-color: var(--clay);
+  }
+
+  .shutter.mode-video .shutter-inner {
+    background: var(--clay);
+  }
+
   .shutter.recording .shutter-inner {
     background: var(--clay);
     border-radius: 10px;
@@ -1056,12 +1064,8 @@
     document.addEventListener('touchend', preventDoubleTapZoom, { passive: false });
   }
 
-  function disableZoomBlock() {
-    document.removeEventListener('touchmove', preventMultiTouchZoom);
-    document.removeEventListener('gesturestart', preventGestureZoom);
-    document.removeEventListener('gesturechange', preventGestureZoom);
-    document.removeEventListener('touchend', preventDoubleTapZoom);
-  }
+  // Active for the whole page, not just the camera view — covers the landing page too.
+  enableZoomBlock();
 
   let currentFacingMode = 'environment';
 
@@ -1072,7 +1076,6 @@
     renderLastShot();
     currentZoom = 1;
     el('camera-video').style.transform = 'scale(1)';
-    enableZoomBlock();
     await startCameraStream(currentFacingMode);
   }
 
@@ -1330,7 +1333,6 @@
   });
 
   function closeCamera() {
-    disableZoomBlock();
     if (mediaStream) {
       mediaStream.getTracks().forEach(t => t.stop());
       mediaStream = null;
@@ -1373,6 +1375,7 @@
     currentMode = mode;
     el('mode-photo').classList.toggle('active', mode === 'photo');
     el('mode-video').classList.toggle('active', mode === 'video');
+    el('btn-shutter').classList.toggle('mode-video', mode === 'video');
 
     if (mode === 'video' && !zoomCapabilities && currentZoom > 1) {
       currentZoom = 1;
@@ -1694,6 +1697,31 @@
 
   window.addEventListener('beforeunload', () => {
     if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+  });
+
+  // Release the camera/mic the moment the guest leaves this tab (switches apps, locks
+  // the phone, backgrounds the browser) instead of leaving it running until the tab is
+  // fully closed. If they come back while the camera view is still open, resume it.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(t => t.stop());
+        mediaStream = null;
+      }
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+      stopRecordTimer();
+    } else if (!el('view-camera').classList.contains('hidden')) {
+      startCameraStream(currentFacingMode);
+    }
+  });
+
+  window.addEventListener('pagehide', () => {
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(t => t.stop());
+      mediaStream = null;
+    }
   });
 
   // ---- Live guest count ----
