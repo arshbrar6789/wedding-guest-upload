@@ -671,6 +671,7 @@
       </div>
     </div>
     <div class="seal-caption">Up to 20 photos per session &middot; video clips up to 25s</div>
+    <div class="seal-caption" id="live-count" style="margin-top: 4px; color: var(--brass-bright); font-weight: 600;"></div>
 
     <input type="file" id="input-gallery" accept="image/*,video/*" multiple>
   </div>
@@ -709,7 +710,7 @@
       <svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
     </div>
     <h1 style="font-size: 30px;" id="success-title">Shared</h1>
-    <p class="sub">Thank you &mdash; it'll show up in the gallery shortly.</p>
+    <p class="sub" id="success-sub">Thank you &mdash; it'll show up in the gallery shortly.</p>
     <div class="btn-row">
       <button class="btn btn-primary" id="btn-again">Add more</button>
     </div>
@@ -752,9 +753,28 @@
 <canvas id="capture-canvas" class="hidden"></canvas>
 
 <script>
+(function() {
+  // ---- Post-event switch: show a static thank-you page once the wedding weekend has passed ----
+  const WEDDING_DATE = new Date('2026-09-15T00:00:00');
+  const SHOW_THANKYOU_AFTER = new Date(WEDDING_DATE.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days after
+
+  if (new Date() > SHOW_THANKYOU_AFTER) {
+    document.body.innerHTML = `
+      <div class="card">
+        <div class="success-seal">
+          <svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
+        </div>
+        <h1 style="font-size: 30px;">With Love,<br>Thank You</h1>
+        <p class="sub">The celebration may be over, but we're so grateful you were part of it. Uploads are now closed &mdash; we can't wait for you to see the photos!</p>
+      </div>
+    `;
+    return;
+  }
+
   // ====== CONFIG ======
   const CONFIG = {
     SAS_FUNCTION_URL: 'https://wedding-upload-func-13457.azurewebsites.net/api/get-upload-url',
+    STATS_FUNCTION_URL: 'https://wedding-upload-func-13457.azurewebsites.net/api/get-stats',
     MAX_VIDEO_SECONDS: 25,
     MAX_ITEMS: 20,
   };
@@ -1123,6 +1143,27 @@
     showView('landing');
   });
 
+  // ---- Rotating thank-you lines ----
+  const THANK_YOU_LINES = [
+    "Thank you — it'll show up in the gallery shortly.",
+    "You're the best. That one's a keeper.",
+    "Cheers to you — that memory is safe with us.",
+    "Received with love. On to the next one!",
+    "That's a good one. Thank you for sharing.",
+    "Captured, and cherished. Thank you.",
+  ];
+
+  // ---- Content hashing (photos only, for natural de-dup on repeat taps) ----
+  async function hashBlob(blob) {
+    try {
+      const buf = await blob.arrayBuffer();
+      const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+      return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (err) {
+      return null; // fall back to random naming if hashing isn't supported
+    }
+  }
+
   // ---- Batch upload ----
   el('btn-review-share').addEventListener('click', async () => {
     if (batch.length === 0) return;
@@ -1141,11 +1182,14 @@
         el('progress-text').textContent = `Uploading ${completed + 1} of ${total}…`;
 
         const ext = item.kind === 'photo' ? 'jpg' : (item.kind === 'video' ? 'mp4' : 'bin');
-        const res = await fetch(`${CONFIG.SAS_FUNCTION_URL}?ext=${encodeURIComponent(ext)}`);
+        const hash = item.kind === 'photo' ? await hashBlob(item.blob) : null;
+        const hashParam = hash ? `&hash=${hash}` : '';
+
+        const res = await fetch(`${CONFIG.SAS_FUNCTION_URL}?ext=${encodeURIComponent(ext)}${hashParam}`);
         if (!res.ok) throw new Error('Could not get an upload link.');
         const { uploadUrl } = await res.json();
 
-        await uploadWithProgress(uploadUrl, item.blob, (pct) => {
+        await uploadWithRetry(uploadUrl, item.blob, (pct) => {
           const overall = ((completed + pct / 100) / total) * 100;
           el('progress-fill').style.width = overall + '%';
         });
@@ -1154,16 +1198,36 @@
       }
 
       el('success-title').textContent = total === 1 ? 'Shared' : `${total} items shared`;
+      el('success-sub').textContent = THANK_YOU_LINES[Math.floor(Math.random() * THANK_YOU_LINES.length)];
       clearBatch();
       showView('success');
     } catch (err) {
-      showError('Something didn\'t upload — check your connection and try again. Anything already shared is safe.');
+      showError('Something didn\'t upload after a few tries — check your connection and try again. Anything already shared is safe.');
     } finally {
       el('btn-review-share').disabled = false;
       el('btn-review-cancel').disabled = false;
       el('btn-review-share').textContent = 'Share it';
     }
   });
+
+  // Retries a failed upload up to 2 extra times (3 attempts total) with a short backoff —
+  // venue WiFi/cellular can drop mid-upload, this smooths over brief hiccups automatically.
+  async function uploadWithRetry(url, blob, onProgress, attempts = 3) {
+    let lastErr;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        await uploadWithProgress(url, blob, onProgress);
+        return;
+      } catch (err) {
+        lastErr = err;
+        if (i < attempts - 1) {
+          el('progress-text').textContent = 'Connection hiccup — retrying…';
+          await new Promise(r => setTimeout(r, 1200 * (i + 1)));
+        }
+      }
+    }
+    throw lastErr;
+  }
 
   function uploadWithProgress(url, blob, onProgress) {
     return new Promise((resolve, reject) => {
@@ -1190,6 +1254,18 @@
   window.addEventListener('beforeunload', () => {
     if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
   });
+
+  // ---- Live guest count ----
+  fetch(CONFIG.STATS_FUNCTION_URL)
+    .then(res => res.ok ? res.json() : null)
+    .then(data => {
+      if (data && typeof data.count === 'number' && data.count > 0) {
+        el('live-count').textContent = `${data.count} photo${data.count === 1 ? '' : 's'} & videos shared so far`;
+      }
+    })
+    .catch(() => { /* fail silently, purely decorative */ });
+
+})();
 </script>
 
 </body>
