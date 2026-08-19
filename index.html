@@ -494,30 +494,13 @@
   @keyframes flash { 0% { opacity: 0.85; } 100% { opacity: 0; } }
 
   .camera-bottom {
-    padding: 18px 16px max(22px, env(safe-area-inset-bottom));
+    padding: 18px 16px max(28px, env(safe-area-inset-bottom));
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
     background: linear-gradient(to top, rgba(0,0,0,0.55), transparent);
     position: relative;
     z-index: 2;
-  }
-
-  .thumb-strip {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 2px;
-    min-height: 52px;
-  }
-
-  .thumb-strip img, .thumb-strip video {
-    width: 48px;
-    height: 48px;
-    border-radius: 10px;
-    object-fit: cover;
-    border: 2px solid var(--brass);
-    flex-shrink: 0;
   }
 
   .mode-toggle {
@@ -544,22 +527,39 @@
   }
 
   .capture-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    justify-items: center;
+  }
+
+  .last-shot {
+    all: unset;
+    cursor: pointer;
+    justify-self: start;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    border: 2px solid rgba(246,241,231,0.6);
+    background: rgba(0,0,0,0.4);
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-  }
-
-  #btn-review {
-    position: absolute;
-    right: 0;
+    overflow: hidden;
+    color: var(--ivory);
     font-size: 13px;
     font-weight: 600;
-    color: var(--brass-bright);
-    background: transparent;
-    all: unset;
-    cursor: pointer;
-    padding: 10px;
+  }
+
+  .last-shot img, .last-shot video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  #btn-flip-camera {
+    justify-self: end;
+    background: rgba(0,0,0,0.4);
   }
 
   .shutter {
@@ -760,6 +760,9 @@
       <svg viewBox="0 0 24 24"><path d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z"/></svg>
     </button>
     <div class="item-counter" id="item-counter">0 / 20</div>
+    <button class="icon-btn hidden-control" id="btn-torch">
+      <svg viewBox="0 0 24 24"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"/></svg>
+    </button>
   </div>
 
   <div class="camera-stream-wrap">
@@ -767,24 +770,26 @@
     <div id="rec-timer">0:00</div>
     <div id="camera-flash"></div>
     <div id="zoom-indicator">1.0x</div>
-    <button class="icon-btn hidden-control" id="btn-torch">
-      <svg viewBox="0 0 24 24"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"/></svg>
-    </button>
   </div>
 
   <div class="camera-bottom">
-    <div class="thumb-strip" id="thumb-strip"></div>
-
     <div class="mode-toggle">
       <button class="mode-pill active" id="mode-photo" data-mode="photo">Photo</button>
       <button class="mode-pill" id="mode-video" data-mode="video">Video</button>
     </div>
 
     <div class="capture-row">
+      <button class="last-shot" id="btn-last-shot">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" fill="rgba(246,241,231,0.5)"/></svg>
+      </button>
+
       <button class="shutter" id="btn-shutter">
         <span class="shutter-inner"></span>
       </button>
-      <button id="btn-review">Review</button>
+
+      <button class="icon-btn" id="btn-flip-camera">
+        <svg viewBox="0 0 24 24"><path d="M12 6V3L8 7l4 4V8c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 16.87 20 15.49 20 14c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 9.74C4.46 11.13 4 12.51 4 14c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+      </button>
     </div>
   </div>
 </div>
@@ -969,25 +974,34 @@
     document.removeEventListener('touchend', preventDoubleTapZoom);
   }
 
+  let currentFacingMode = 'environment';
+
   async function openCamera() {
     showView(null);
     el('view-camera').classList.remove('hidden');
     updateItemCounter();
-    renderThumbStrip();
+    renderLastShot();
     currentZoom = 1;
     updateZoomVisual();
     enableZoomBlock();
+    await startCameraStream(currentFacingMode);
+  }
 
+  async function startCameraStream(facingMode) {
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(t => t.stop());
+    }
     try {
       mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: 'environment',
+          facingMode: facingMode,
           width: { ideal: 3840 },
           height: { ideal: 2160 }
         },
         audio: true
       });
       el('camera-video').srcObject = mediaStream;
+      currentFacingMode = facingMode;
 
       videoTrack = mediaStream.getVideoTracks()[0];
       setupZoomAndTorch(videoTrack);
@@ -996,6 +1010,12 @@
       showError('Could not access the camera. You can still add photos or videos using the Gallery button.');
     }
   }
+
+  el('btn-flip-camera').addEventListener('click', () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') return; // don't flip mid-record
+    const next = currentFacingMode === 'environment' ? 'user' : 'environment';
+    startCameraStream(next);
+  });
 
   function setupZoomAndTorch(track) {
     zoomCapabilities = null;
@@ -1104,7 +1124,8 @@
     }
   });
 
-  el('btn-review').addEventListener('click', () => {
+  el('btn-last-shot').addEventListener('click', () => {
+    if (batch.length === 0) return; // nothing captured yet, do nothing
     closeCamera();
     el('review-eyebrow').textContent = 'Ready to share';
     renderReview();
@@ -1178,7 +1199,7 @@
       if (blob) {
         addToBatch(blob, 'photo');
         updateItemCounter();
-        renderThumbStrip();
+        renderLastShot();
       }
     }, 'image/jpeg', 0.92);
   }
@@ -1217,7 +1238,7 @@
       const blob = new Blob(recordedChunks, { type: mimeType });
       addToBatch(blob, 'video');
       updateItemCounter();
-      renderThumbStrip();
+      renderLastShot();
     };
 
     mediaRecorder.start();
@@ -1263,15 +1284,18 @@
     el('item-counter').textContent = `${batch.length} / ${CONFIG.MAX_ITEMS}`;
   }
 
-  function renderThumbStrip() {
-    const strip = el('thumb-strip');
-    strip.innerHTML = '';
-    batch.forEach(item => {
-      const node = item.kind === 'photo'
-        ? Object.assign(document.createElement('img'), { src: item.url })
-        : Object.assign(document.createElement('video'), { src: item.url, muted: true });
-      strip.appendChild(node);
-    });
+  function renderLastShot() {
+    const btn = el('btn-last-shot');
+    if (batch.length === 0) {
+      btn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" fill="rgba(246,241,231,0.5)"/></svg>';
+      return;
+    }
+    const last = batch[batch.length - 1];
+    const node = last.kind === 'photo'
+      ? Object.assign(document.createElement('img'), { src: last.url })
+      : Object.assign(document.createElement('video'), { src: last.url, muted: true });
+    btn.innerHTML = '';
+    btn.appendChild(node);
   }
 
   // ---- Review screen ----
