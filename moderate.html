@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Moderate — Arsh &amp; Meghna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest: #16261E;
+    --forest-deep: #0E1B15;
+    --brass: #C9A34E;
+    --brass-bright: #E0BE72;
+    --ivory: #F6F1E7;
+    --sage: #7C9885;
+    --clay: #85533C;
+    --radius: 28px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--forest-deep);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    color: var(--ivory);
+    min-height: 100vh;
+  }
+
+  h1, h2 { font-family: 'Fraunces', serif; }
+
+  header {
+    padding: 24px 20px 16px;
+    text-align: center;
+    border-bottom: 2px solid var(--brass);
+    background: var(--forest);
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    letter-spacing: 0.02em;
+    color: var(--brass-bright);
+    font-weight: 500;
+  }
+
+  header p {
+    margin: 6px 0 0;
+    font-size: 0.85rem;
+    color: var(--sage);
+  }
+
+  #login-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    padding: 20px;
+    gap: 16px;
+  }
+
+  #login-screen input {
+    padding: 12px 16px;
+    font-size: 1rem;
+    border: 1px solid var(--brass);
+    background: var(--forest);
+    color: var(--ivory);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 280px;
+    font-family: inherit;
+  }
+
+  #login-screen input:focus {
+    outline: 2px solid var(--brass-bright);
+    outline-offset: 2px;
+  }
+
+  button {
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    transition: opacity 0.15s ease;
+  }
+
+  button:active { opacity: 0.75; }
+  button:focus-visible { outline: 2px solid var(--brass-bright); outline-offset: 2px; }
+
+  .btn-primary {
+    background: var(--brass);
+    color: var(--forest-deep);
+  }
+
+  .btn-approve {
+    background: var(--brass);
+    color: var(--forest-deep);
+    flex: 1;
+  }
+
+  .btn-reject {
+    background: transparent;
+    color: var(--clay);
+    border: 1px solid var(--clay);
+    flex: 1;
+  }
+
+  #error-msg {
+    color: var(--clay);
+    font-size: 0.85rem;
+    min-height: 1em;
+  }
+
+  main {
+    padding: 16px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  #status-bar {
+    text-align: center;
+    padding: 10px;
+    font-size: 0.85rem;
+    color: var(--sage);
+  }
+
+  #grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--forest);
+    border: 1px solid rgba(201, 163, 78, 0.3);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .card img, .card video {
+    width: 100%;
+    max-height: 420px;
+    object-fit: contain;
+    background: #000;
+    display: block;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .card-meta {
+    font-size: 0.7rem;
+    color: var(--sage);
+    padding: 4px 12px 0;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--sage);
+    font-size: 0.95rem;
+    font-family: 'Fraunces', serif;
+  }
+
+  .hidden { display: none !important; }
+
+  #refresh-btn {
+    display: block;
+    margin: 0 auto 16px;
+    background: transparent;
+    border: 1px solid var(--brass);
+    color: var(--brass-bright);
+  }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <header style="border-bottom:none;">
+    <h1>Moderation</h1>
+    <p>Arsh &amp; Meghna's Wedding</p>
+  </header>
+  <input type="password" id="password-input" placeholder="Enter password" autocomplete="off">
+  <button class="btn-primary" id="login-btn">Enter</button>
+  <div id="error-msg"></div>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <h1>Moderation</h1>
+    <p>Arsh &amp; Meghna's Wedding</p>
+  </header>
+  <main>
+    <button id="refresh-btn">Refresh</button>
+    <div id="status-bar"></div>
+    <div id="grid"></div>
+  </main>
+</div>
+
+<script>
+const FUNCTION_BASE = "https://wedding-upload-func-13457.azurewebsites.net/api";
+let password = "";
+
+const loginScreen = document.getElementById("login-screen");
+const app = document.getElementById("app");
+const passwordInput = document.getElementById("password-input");
+const loginBtn = document.getElementById("login-btn");
+const errorMsg = document.getElementById("error-msg");
+const grid = document.getElementById("grid");
+const statusBar = document.getElementById("status-bar");
+const refreshBtn = document.getElementById("refresh-btn");
+
+loginBtn.addEventListener("click", attemptLogin);
+passwordInput.addEventListener("keydown", (e) => { if (e.key === "Enter") attemptLogin(); });
+refreshBtn.addEventListener("click", loadPending);
+
+async function attemptLogin() {
+  const candidate = passwordInput.value;
+  errorMsg.textContent = "";
+  loginBtn.disabled = true;
+  loginBtn.textContent = "Checking...";
+  try {
+    const res = await fetch(`${FUNCTION_BASE}/list-pending`, {
+      headers: { "X-Moderator-Password": candidate }
+    });
+    if (res.status === 401) {
+      errorMsg.textContent = "Incorrect password.";
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Enter";
+      return;
+    }
+    if (!res.ok) throw new Error("Server error");
+    password = candidate;
+    loginScreen.classList.add("hidden");
+    app.classList.remove("hidden");
+    const data = await res.json();
+    renderItems(data.items || []);
+  } catch (err) {
+    errorMsg.textContent = "Could not reach server. Try again.";
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Enter";
+  }
+}
+
+async function loadPending() {
+  statusBar.textContent = "Loading...";
+  try {
+    const res = await fetch(`${FUNCTION_BASE}/list-pending`, {
+      headers: { "X-Moderator-Password": password }
+    });
+    if (!res.ok) throw new Error("Server error");
+    const data = await res.json();
+    renderItems(data.items || []);
+  } catch (err) {
+    statusBar.textContent = "Failed to load. Try refreshing again.";
+  }
+}
+
+function isVideo(name) {
+  return /\.(mp4|mov|webm|m4v)$/i.test(name);
+}
+
+function renderItems(items) {
+  grid.innerHTML = "";
+  if (items.length === 0) {
+    statusBar.textContent = "";
+    grid.innerHTML = `<div class="empty-state">No photos waiting for review.</div>`;
+    return;
+  }
+  statusBar.textContent = `${items.length} item${items.length === 1 ? "" : "s"} pending review`;
+
+  items.forEach((item) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.dataset.blobName = item.blobName;
+
+    const media = isVideo(item.blobName)
+      ? `<video src="${item.url}" controls preload="metadata"></video>`
+      : `<img src="${item.url}" alt="Pending upload" loading="lazy">`;
+
+    const sizeKb = (item.size / 1024).toFixed(0);
+
+    card.innerHTML = `
+      ${media}
+      <div class="card-meta">${sizeKb} KB</div>
+      <div class="card-actions">
+        <button class="btn-approve">Approve</button>
+        <button class="btn-reject">Reject</button>
+      </div>
+    `;
+
+    card.querySelector(".btn-approve").addEventListener("click", () => moderate(item.blobName, "approve", card));
+    card.querySelector(".btn-reject").addEventListener("click", () => moderate(item.blobName, "reject", card));
+
+    grid.appendChild(card);
+  });
+}
+
+async function moderate(blobName, action, card) {
+  const buttons = card.querySelectorAll("button");
+  buttons.forEach(b => b.disabled = true);
+  try {
+    const res = await fetch(`${FUNCTION_BASE}/${action}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Moderator-Password": password
+      },
+      body: JSON.stringify({ blobName })
+    });
+    if (!res.ok) throw new Error("Failed");
+    card.style.opacity = "0.3";
+    setTimeout(() => {
+      card.remove();
+      if (grid.children.length === 0) {
+        grid.innerHTML = `<div class="empty-state">No photos waiting for review.</div>`;
+        statusBar.textContent = "";
+      } else {
+        const remaining = grid.children.length;
+        statusBar.textContent = `${remaining} item${remaining === 1 ? "" : "s"} pending review`;
+      }
+    }, 200);
+  } catch (err) {
+    buttons.forEach(b => b.disabled = false);
+    alert("Action failed. Check connection and try again.");
+  }
+}
+</script>
+
+</body>
+</html>
