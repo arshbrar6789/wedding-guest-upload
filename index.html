@@ -6,9 +6,10 @@
 <title>Share the Moment</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-  
+
 <style>
   :root {
     --forest: #16261E;
@@ -40,6 +41,7 @@
     background:
       radial-gradient(circle at 50% 0%, rgba(201,163,78,0.10), transparent 55%),
       var(--forest);
+    overflow-x: hidden;
   }
 
   .card {
@@ -56,6 +58,50 @@
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--brass);
+    margin-bottom: 14px;
+  }
+
+  .names {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(26px, 7vw, 34px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    background: linear-gradient(100deg, var(--brass) 20%, var(--brass-bright) 40%, #fff6de 50%, var(--brass-bright) 60%, var(--brass) 80%);
+    background-size: 250% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 5s linear infinite;
+  }
+
+  .names .amp {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 0.7em;
+    color: var(--sage);
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    transform: translateY(-1px) rotate(-4deg);
+    display: inline-block;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 250% 50%; }
+  }
+
+  .date-line {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--sage);
     margin-bottom: 14px;
   }
 
@@ -76,12 +122,67 @@
     max-width: 320px;
   }
 
-  /* ---- Seal buttons (landing) ---- */
+  /* ---- Ambient background animation (landing) ---- */
+  .seal-stage {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+
+  .ambient-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 280px;
+    height: 280px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,163,78,0.22), transparent 70%);
+    filter: blur(6px);
+    animation: breathe 4.5s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .ambient-glow.delay {
+    animation-delay: 2.2s;
+    width: 220px;
+    height: 220px;
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.5; }
+    50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.9; }
+  }
+
+  .sparkle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: var(--brass-bright);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 0;
+    box-shadow: 0 0 6px 1px rgba(224,190,114,0.8);
+    animation: float-up 4.5s ease-in infinite;
+  }
+
+  @keyframes float-up {
+    0% { opacity: 0; transform: translateY(10px) scale(0.6); }
+    15% { opacity: 0.9; }
+    80% { opacity: 0.5; }
+    100% { opacity: 0; transform: translateY(-130px) scale(1); }
+  }
+
   .seal-row {
+    position: relative;
+    z-index: 1;
     display: flex;
     gap: 20px;
     justify-content: center;
-    margin-bottom: 8px;
   }
 
   .seal-btn {
@@ -117,6 +218,23 @@
     border: 1.5px dashed rgba(22,38,30,0.35);
   }
 
+  .seal::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(201,163,78,0.5);
+    animation: pulse-ring 2.6s ease-out infinite;
+  }
+
+  .seal-btn:nth-child(2) .seal::after { animation-delay: 0.9s; }
+
+  @keyframes pulse-ring {
+    0% { transform: scale(0.9); opacity: 0.8; }
+    80% { transform: scale(1.35); opacity: 0; }
+    100% { transform: scale(1.35); opacity: 0; }
+  }
+
   .seal svg {
     width: 38px;
     height: 38px;
@@ -141,27 +259,10 @@
   .seal-caption {
     font-size: 11.5px;
     color: var(--sage);
+    margin-top: 8px;
   }
 
   input[type="file"] { display: none; }
-
-  /* ---- Preview state ---- */
-  .preview-box {
-    width: 100%;
-    border-radius: var(--radius);
-    overflow: hidden;
-    background: var(--forest-deep);
-    border: 1px solid rgba(201,163,78,0.25);
-    margin-bottom: 24px;
-  }
-
-  .preview-box img, .preview-box video {
-    display: block;
-    width: 100%;
-    max-height: 55dvh;
-    object-fit: contain;
-    background: #000;
-  }
 
   .btn-row {
     display: flex;
@@ -260,6 +361,275 @@
 
   .hidden { display: none !important; }
 
+  /* ---- Camera view ---- */
+  #view-camera {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .camera-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: max(16px, env(safe-area-inset-top)) 16px 12px;
+    color: var(--ivory);
+    position: relative;
+    z-index: 2;
+  }
+
+  .icon-btn {
+    all: unset;
+    cursor: pointer;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-btn svg { width: 22px; height: 22px; fill: var(--ivory); }
+
+  .item-counter {
+    background: rgba(0,0,0,0.4);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .camera-stream-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #000;
+  }
+
+  #camera-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  #rec-timer {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(181,83,60,0.85);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 999px;
+    display: none;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #rec-timer::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    animation: blink-dot 1s ease-in-out infinite;
+  }
+
+  @keyframes blink-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  #camera-flash {
+    position: absolute;
+    inset: 0;
+    background: white;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .flash-anim { animation: flash 0.25s ease-out; }
+  @keyframes flash { 0% { opacity: 0.85; } 100% { opacity: 0; } }
+
+  .camera-bottom {
+    padding: 18px 16px max(22px, env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: linear-gradient(to top, rgba(0,0,0,0.55), transparent);
+    position: relative;
+    z-index: 2;
+  }
+
+  .thumb-strip {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    min-height: 52px;
+  }
+
+  .thumb-strip img, .thumb-strip video {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 2px solid var(--brass);
+    flex-shrink: 0;
+  }
+
+  .mode-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .mode-pill {
+    all: unset;
+    cursor: pointer;
+    padding: 8px 22px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(246,241,231,0.6);
+    background: transparent;
+    transition: all 0.15s ease;
+  }
+
+  .mode-pill.active {
+    color: var(--forest-deep);
+    background: var(--brass);
+  }
+
+  .capture-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  #btn-review {
+    position: absolute;
+    right: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brass-bright);
+    background: transparent;
+    all: unset;
+    cursor: pointer;
+    padding: 10px;
+  }
+
+  .shutter {
+    all: unset;
+    cursor: pointer;
+    width: 74px;
+    height: 74px;
+    border-radius: 50%;
+    border: 4px solid var(--ivory);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease;
+  }
+
+  .shutter-inner {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: var(--ivory);
+    transition: all 0.2s ease;
+  }
+
+  .shutter.recording .shutter-inner {
+    background: var(--clay);
+    border-radius: 10px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .shutter:active { transform: scale(0.92); }
+
+  /* ---- Review grid ---- */
+  #view-review {
+    width: 100%;
+  }
+
+  .review-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 24px;
+  }
+
+  .review-tile {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--forest-deep);
+    border: 1px solid rgba(201,163,78,0.25);
+  }
+
+  .review-tile img, .review-tile video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .review-tile .video-badge {
+    position: absolute;
+    bottom: 6px;
+    left: 6px;
+    background: rgba(0,0,0,0.55);
+    border-radius: 6px;
+    padding: 2px 6px;
+    display: flex;
+    align-items: center;
+  }
+
+  .review-tile .video-badge svg { width: 12px; height: 12px; fill: var(--ivory); }
+
+  .tile-delete {
+    all: unset;
+    cursor: pointer;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(14,27,21,0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tile-delete svg { width: 14px; height: 14px; fill: var(--ivory); }
+
+  .add-more-tile {
+    all: unset;
+    cursor: pointer;
+    aspect-ratio: 1;
+    border-radius: 14px;
+    border: 1.5px dashed rgba(201,163,78,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--brass);
+  }
+
+  .add-more-tile svg { width: 26px; height: 26px; fill: var(--brass); }
+
   @media (prefers-reduced-motion: reduce) {
     * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
   }
@@ -271,32 +641,41 @@
 
   <!-- LANDING -->
   <div id="view-landing">
-    <div class="eyebrow">Arsh &amp; Meghna &middot; September 2026</div>
+    <div class="names"><span>Arsh</span><span class="amp">&amp;</span><span>Meghna</span></div>
+    <div class="date-line">September 2026</div>
     <h1>Share the<br>Moment</h1>
-    <p class="sub">Capture a photo, or a video up to 25 seconds. It'll appear on the gallery tonight.</p>
+    <p class="sub">Capture up to 20 photos, or a video up to 25 seconds. Review before sharing.</p>
 
-    <div class="seal-row">
-      <button class="seal-btn" id="btn-photo">
-        <span class="seal">
-          <svg viewBox="0 0 24 24"><path d="M9 3l-1.6 2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.4L15 3H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>
-        </span>
-        <span class="seal-label">Photo</span>
-      </button>
+    <div class="seal-stage">
+      <div class="ambient-glow"></div>
+      <div class="ambient-glow delay"></div>
+      <div class="sparkle" style="left: 22%; top: 70%; animation-delay: 0s;"></div>
+      <div class="sparkle" style="left: 75%; top: 65%; animation-delay: 1.4s;"></div>
+      <div class="sparkle" style="left: 50%; top: 80%; animation-delay: 2.6s;"></div>
+      <div class="sparkle" style="left: 35%; top: 60%; animation-delay: 3.5s;"></div>
+      <div class="sparkle" style="left: 65%; top: 75%; animation-delay: 0.8s;"></div>
+      <div class="seal-row">
+        <button class="seal-btn" id="btn-camera">
+          <span class="seal">
+            <svg viewBox="0 0 24 24"><path d="M9 3l-1.6 2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.4L15 3H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>
+          </span>
+          <span class="seal-label">Camera</span>
+        </button>
 
-      <button class="seal-btn" id="btn-video">
-        <span class="seal">
-          <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-        </span>
-        <span class="seal-label">Video</span>
-      </button>
+        <button class="seal-btn" id="btn-gallery">
+          <span class="seal">
+            <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+          </span>
+          <span class="seal-label">Gallery</span>
+        </button>
+      </div>
     </div>
-    <div class="seal-caption">Video clips: 25 seconds max</div>
+    <div class="seal-caption">Up to 20 photos per session &middot; video clips up to 25s</div>
 
-    <input type="file" id="input-photo" accept="image/*" capture="environment">
-    <input type="file" id="input-video" accept="video/*" capture="environment">
+    <input type="file" id="input-gallery" accept="image/*,video/*" multiple>
   </div>
 
-  <!-- ERROR (e.g. video too long) -->
+  <!-- ERROR -->
   <div id="view-error" class="hidden">
     <div class="eyebrow">One thing first</div>
     <h1 style="font-size: 28px;">Almost there</h1>
@@ -306,13 +685,16 @@
     </div>
   </div>
 
-  <!-- PREVIEW -->
-  <div id="view-preview" class="hidden">
-    <div class="eyebrow" id="preview-eyebrow">Ready to share</div>
-    <div class="preview-box" id="preview-box"></div>
+  <!-- REVIEW -->
+  <div id="view-review" class="hidden">
+    <div class="eyebrow" id="review-eyebrow">Ready to share</div>
+    <h1 style="font-size: 26px; margin-bottom: 20px;">Take a look</h1>
+
+    <div class="review-grid" id="review-grid"></div>
+
     <div class="btn-row">
-      <button class="btn btn-ghost" id="btn-cancel">Choose different</button>
-      <button class="btn btn-primary" id="btn-upload">Share it</button>
+      <button class="btn btn-ghost" id="btn-review-cancel">Start over</button>
+      <button class="btn btn-primary" id="btn-review-share">Share it</button>
     </div>
 
     <div class="progress-wrap hidden" id="progress-wrap">
@@ -326,21 +708,55 @@
     <div class="success-seal">
       <svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
     </div>
-    <h1 style="font-size: 30px;">Shared</h1>
+    <h1 style="font-size: 30px;" id="success-title">Shared</h1>
     <p class="sub">Thank you &mdash; it'll show up in the gallery shortly.</p>
     <div class="btn-row">
-      <button class="btn btn-primary" id="btn-again">Add another</button>
+      <button class="btn btn-primary" id="btn-again">Add more</button>
     </div>
   </div>
 
 </div>
 
+<!-- CAMERA (full-screen overlay) -->
+<div id="view-camera" class="hidden">
+  <div class="camera-top">
+    <button class="icon-btn" id="btn-camera-close">
+      <svg viewBox="0 0 24 24"><path d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z"/></svg>
+    </button>
+    <div class="item-counter" id="item-counter">0 / 20</div>
+  </div>
+
+  <div class="camera-stream-wrap">
+    <video id="camera-video" autoplay muted playsinline></video>
+    <div id="rec-timer">0:00</div>
+    <div id="camera-flash"></div>
+  </div>
+
+  <div class="camera-bottom">
+    <div class="thumb-strip" id="thumb-strip"></div>
+
+    <div class="mode-toggle">
+      <button class="mode-pill active" id="mode-photo" data-mode="photo">Photo</button>
+      <button class="mode-pill" id="mode-video" data-mode="video">Video</button>
+    </div>
+
+    <div class="capture-row">
+      <button class="shutter" id="btn-shutter">
+        <span class="shutter-inner"></span>
+      </button>
+      <button id="btn-review">Review</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="capture-canvas" class="hidden"></canvas>
+
 <script>
   // ====== CONFIG ======
   const CONFIG = {
-    // Azure Function endpoint that issues the SAS upload URL
     SAS_FUNCTION_URL: 'https://wedding-upload-func-13457.azurewebsites.net/api/get-upload-url',
     MAX_VIDEO_SECONDS: 25,
+    MAX_ITEMS: 20,
   };
   // =====================
 
@@ -349,139 +765,416 @@
   const views = {
     landing: el('view-landing'),
     error: el('view-error'),
-    preview: el('view-preview'),
+    review: el('view-review'),
     success: el('view-success'),
   };
 
   function showView(name) {
     Object.values(views).forEach(v => v.classList.add('hidden'));
-    views[name].classList.remove('hidden');
+    el('view-camera').classList.add('hidden');
+    if (views[name]) views[name].classList.remove('hidden');
   }
 
-  let currentFile = null;
-  let currentKind = null; // 'photo' | 'video'
+  function showError(message) {
+    el('error-message').textContent = message;
+    showView('error');
+  }
 
-  // ---- Landing triggers ----
-  el('btn-photo').addEventListener('click', () => el('input-photo').click());
-  el('btn-video').addEventListener('click', () => el('input-video').click());
+  el('btn-error-retry').addEventListener('click', () => showView('landing'));
 
-  el('input-photo').addEventListener('change', (e) => handleFile(e.target.files[0], 'photo'));
-  el('input-video').addEventListener('change', (e) => handleFile(e.target.files[0], 'video'));
+  // ---- Batch state ----
+  // Each item: { id, kind: 'photo'|'video', blob, url }
+  let batch = [];
+  let idCounter = 0;
 
-  function handleFile(file, kind) {
-    if (!file) return;
+  function addToBatch(blob, kind) {
+    if (batch.length >= CONFIG.MAX_ITEMS) return false;
+    const id = ++idCounter;
+    const url = URL.createObjectURL(blob);
+    batch.push({ id, kind, blob, url });
+    return true;
+  }
 
-    if (kind === 'video') {
+  function removeFromBatch(id) {
+    const idx = batch.findIndex(b => b.id === id);
+    if (idx >= 0) {
+      URL.revokeObjectURL(batch[idx].url);
+      batch.splice(idx, 1);
+    }
+  }
+
+  function clearBatch() {
+    batch.forEach(b => URL.revokeObjectURL(b.url));
+    batch = [];
+  }
+
+  // ---- Landing ----
+  el('btn-camera').addEventListener('click', openCamera);
+  el('btn-gallery').addEventListener('click', () => el('input-gallery').click());
+
+  el('input-gallery').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (files.length === 0) return;
+
+    let skippedLong = 0;
+    let skippedFull = 0;
+
+    for (const file of files) {
+      if (batch.length >= CONFIG.MAX_ITEMS) { skippedFull++; continue; }
+      const kind = file.type.startsWith('video/') ? 'video' : 'photo';
+
+      if (kind === 'video') {
+        const ok = await checkVideoDuration(file);
+        if (!ok) { skippedLong++; continue; }
+      }
+      addToBatch(file, kind);
+    }
+
+    if (batch.length === 0) {
+      showError('Those clips were too long or something else went wrong. Please try again.');
+      return;
+    }
+
+    if (skippedLong > 0 || skippedFull > 0) {
+      const parts = [];
+      if (skippedLong > 0) parts.push(`${skippedLong} video${skippedLong > 1 ? 's' : ''} over ${CONFIG.MAX_VIDEO_SECONDS}s`);
+      if (skippedFull > 0) parts.push(`${skippedFull} item${skippedFull > 1 ? 's' : ''} past the 20-item limit`);
+      // Non-blocking notice folded into the review eyebrow
+      el('review-eyebrow').textContent = `Skipped: ${parts.join(' and ')}`;
+    } else {
+      el('review-eyebrow').textContent = 'Ready to share';
+    }
+
+    renderReview();
+    showView('review');
+  });
+
+  function checkVideoDuration(file) {
+    return new Promise((resolve) => {
       const probe = document.createElement('video');
       probe.preload = 'metadata';
       probe.src = URL.createObjectURL(file);
       probe.onloadedmetadata = () => {
         const duration = probe.duration;
         URL.revokeObjectURL(probe.src);
-        if (duration > CONFIG.MAX_VIDEO_SECONDS + 0.5) {
-          el('error-message').textContent =
-            `That clip runs about ${Math.round(duration)} seconds — the limit here is ${CONFIG.MAX_VIDEO_SECONDS}. Please trim it or capture a shorter moment.`;
-          showView('error');
-        } else {
-          setPreview(file, kind);
-        }
+        resolve(duration <= CONFIG.MAX_VIDEO_SECONDS + 0.5);
       };
-      probe.onerror = () => setPreview(file, kind); // fall back gracefully if metadata can't load
-    } else {
-      setPreview(file, kind);
+      probe.onerror = () => resolve(true); // fall back gracefully
+    });
+  }
+
+  // ---- Camera view ----
+  let mediaStream = null;
+  let mediaRecorder = null;
+  let recordedChunks = [];
+  let recordTimer = null;
+  let recordSeconds = 0;
+  let currentMode = 'photo';
+
+  async function openCamera() {
+    showView(null);
+    el('view-camera').classList.remove('hidden');
+    updateItemCounter();
+    renderThumbStrip();
+
+    try {
+      mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 3840 },
+          height: { ideal: 2160 }
+        },
+        audio: true
+      });
+      el('camera-video').srcObject = mediaStream;
+    } catch (err) {
+      closeCamera();
+      showError('Could not access the camera. You can still add photos or videos using the Gallery button.');
     }
   }
 
-  el('btn-error-retry').addEventListener('click', () => {
-    el('input-video').value = '';
-    el('input-photo').value = '';
-    showView('landing');
+  function closeCamera() {
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(t => t.stop());
+      mediaStream = null;
+    }
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
+    stopRecordTimer();
+    el('view-camera').classList.add('hidden');
+  }
+
+  el('btn-camera-close').addEventListener('click', () => {
+    closeCamera();
+    if (batch.length > 0) {
+      renderReview();
+      showView('review');
+    } else {
+      showView('landing');
+    }
   });
 
-  function setPreview(file, kind) {
-    currentFile = file;
-    currentKind = kind;
+  el('btn-review').addEventListener('click', () => {
+    closeCamera();
+    el('review-eyebrow').textContent = 'Ready to share';
+    renderReview();
+    showView('review');
+  });
 
-    const box = el('preview-box');
-    box.innerHTML = '';
-    const url = URL.createObjectURL(file);
+  // Mode toggle
+  el('mode-photo').addEventListener('click', () => setMode('photo'));
+  el('mode-video').addEventListener('click', () => setMode('video'));
 
-    if (kind === 'photo') {
-      const img = document.createElement('img');
-      img.src = url;
-      box.appendChild(img);
-    } else {
-      const vid = document.createElement('video');
-      vid.src = url;
-      vid.controls = true;
-      vid.playsInline = true;
-      box.appendChild(vid);
-    }
-
-    el('preview-eyebrow').textContent = kind === 'photo' ? 'Your photo' : 'Your video';
-    el('progress-wrap').classList.add('hidden');
-    el('btn-upload').disabled = false;
-    el('btn-upload').textContent = 'Share it';
-    showView('preview');
+  function setMode(mode) {
+    if (mediaRecorder && mediaRecorder.state === 'recording') return; // don't switch mid-record
+    currentMode = mode;
+    el('mode-photo').classList.toggle('active', mode === 'photo');
+    el('mode-video').classList.toggle('active', mode === 'video');
   }
 
-  el('btn-cancel').addEventListener('click', () => {
-    currentFile = null;
-    el('input-photo').value = '';
-    el('input-video').value = '';
+  // Shutter
+  el('btn-shutter').addEventListener('click', () => {
+    if (batch.length >= CONFIG.MAX_ITEMS) {
+      showToastLimit();
+      return;
+    }
+    if (currentMode === 'photo') {
+      capturePhoto();
+    } else {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+  });
+
+  function showToastLimit() {
+    const counter = el('item-counter');
+    counter.style.color = 'var(--clay)';
+    setTimeout(() => { counter.style.color = ''; }, 700);
+  }
+
+  function capturePhoto() {
+    const video = el('camera-video');
+    const canvas = el('capture-canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // flash effect
+    const flash = el('camera-flash');
+    flash.classList.remove('flash-anim');
+    requestAnimationFrame(() => flash.classList.add('flash-anim'));
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        addToBatch(blob, 'photo');
+        updateItemCounter();
+        renderThumbStrip();
+      }
+    }, 'image/jpeg', 0.92);
+  }
+
+  function pickRecorderOptions() {
+    const candidates = [
+      'video/mp4;codecs=h264',
+      'video/webm;codecs=vp9',
+      'video/webm;codecs=vp8',
+      'video/webm'
+    ];
+    for (const type of candidates) {
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported(type)) {
+        return { mimeType: type, videoBitsPerSecond: 8000000, audioBitsPerSecond: 128000 };
+      }
+    }
+    return {};
+  }
+
+  function startRecording() {
+    if (!mediaStream) return;
+    recordedChunks = [];
+    const options = pickRecorderOptions();
+    try {
+      mediaRecorder = new MediaRecorder(mediaStream, options);
+    } catch (err) {
+      mediaRecorder = new MediaRecorder(mediaStream);
+    }
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      const mimeType = mediaRecorder.mimeType || 'video/webm';
+      const blob = new Blob(recordedChunks, { type: mimeType });
+      addToBatch(blob, 'video');
+      updateItemCounter();
+      renderThumbStrip();
+    };
+
+    mediaRecorder.start();
+    el('btn-shutter').classList.add('recording');
+    startRecordTimer();
+  }
+
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+    }
+    el('btn-shutter').classList.remove('recording');
+    stopRecordTimer();
+  }
+
+  function startRecordTimer() {
+    recordSeconds = 0;
+    const timerEl = el('rec-timer');
+    timerEl.style.display = 'flex';
+    updateTimerText();
+    recordTimer = setInterval(() => {
+      recordSeconds += 1;
+      updateTimerText();
+      if (recordSeconds >= CONFIG.MAX_VIDEO_SECONDS) {
+        stopRecording();
+      }
+    }, 1000);
+  }
+
+  function stopRecordTimer() {
+    clearInterval(recordTimer);
+    recordTimer = null;
+    el('rec-timer').style.display = 'none';
+  }
+
+  function updateTimerText() {
+    const m = Math.floor(recordSeconds / 60);
+    const s = recordSeconds % 60;
+    el('rec-timer').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  function updateItemCounter() {
+    el('item-counter').textContent = `${batch.length} / ${CONFIG.MAX_ITEMS}`;
+  }
+
+  function renderThumbStrip() {
+    const strip = el('thumb-strip');
+    strip.innerHTML = '';
+    batch.forEach(item => {
+      const node = item.kind === 'photo'
+        ? Object.assign(document.createElement('img'), { src: item.url })
+        : Object.assign(document.createElement('video'), { src: item.url, muted: true });
+      strip.appendChild(node);
+    });
+  }
+
+  // ---- Review screen ----
+  function renderReview() {
+    const grid = el('review-grid');
+    grid.innerHTML = '';
+
+    batch.forEach(item => {
+      const tile = document.createElement('div');
+      tile.className = 'review-tile';
+
+      const media = item.kind === 'photo'
+        ? Object.assign(document.createElement('img'), { src: item.url })
+        : Object.assign(document.createElement('video'), { src: item.url, muted: true, playsInline: true });
+      tile.appendChild(media);
+
+      if (item.kind === 'video') {
+        const badge = document.createElement('div');
+        badge.className = 'video-badge';
+        badge.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+        tile.appendChild(badge);
+      }
+
+      const del = document.createElement('button');
+      del.className = 'tile-delete';
+      del.innerHTML = '<svg viewBox="0 0 24 24"><path d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z"/></svg>';
+      del.addEventListener('click', () => {
+        removeFromBatch(item.id);
+        renderReview();
+        if (batch.length === 0) showView('landing');
+      });
+      tile.appendChild(del);
+
+      grid.appendChild(tile);
+    });
+
+    if (batch.length < CONFIG.MAX_ITEMS) {
+      const addTile = document.createElement('button');
+      addTile.className = 'add-more-tile';
+      addTile.innerHTML = '<svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg>';
+      addTile.addEventListener('click', openCamera);
+      grid.appendChild(addTile);
+    }
+  }
+
+  el('btn-review-cancel').addEventListener('click', () => {
+    clearBatch();
     showView('landing');
   });
 
   el('btn-again').addEventListener('click', () => {
-    currentFile = null;
-    el('input-photo').value = '';
-    el('input-video').value = '';
+    clearBatch();
     showView('landing');
   });
 
-  // ---- Upload flow ----
-  el('btn-upload').addEventListener('click', async () => {
-    if (!currentFile) return;
+  // ---- Batch upload ----
+  el('btn-review-share').addEventListener('click', async () => {
+    if (batch.length === 0) return;
 
-    el('btn-upload').disabled = true;
-    el('btn-cancel').disabled = true;
-    el('btn-upload').textContent = 'Preparing…';
+    el('btn-review-share').disabled = true;
+    el('btn-review-cancel').disabled = true;
+    el('btn-review-share').textContent = 'Sharing…';
     el('progress-wrap').classList.remove('hidden');
     el('progress-fill').style.width = '0%';
-    el('progress-text').textContent = 'Preparing upload…';
+
+    const total = batch.length;
+    let completed = 0;
 
     try {
-      const ext = (currentFile.name.split('.').pop() || (currentKind === 'photo' ? 'jpg' : 'mp4')).toLowerCase();
-      const res = await fetch(`${CONFIG.SAS_FUNCTION_URL}?ext=${encodeURIComponent(ext)}`);
-      if (!res.ok) throw new Error('Could not get an upload link.');
-      const { uploadUrl } = await res.json();
+      for (const item of batch) {
+        el('progress-text').textContent = `Uploading ${completed + 1} of ${total}…`;
 
-      el('progress-text').textContent = 'Uploading…';
-      await uploadWithProgress(uploadUrl, currentFile);
+        const ext = item.kind === 'photo' ? 'jpg' : (item.kind === 'video' ? 'mp4' : 'bin');
+        const res = await fetch(`${CONFIG.SAS_FUNCTION_URL}?ext=${encodeURIComponent(ext)}`);
+        if (!res.ok) throw new Error('Could not get an upload link.');
+        const { uploadUrl } = await res.json();
 
+        await uploadWithProgress(uploadUrl, item.blob, (pct) => {
+          const overall = ((completed + pct / 100) / total) * 100;
+          el('progress-fill').style.width = overall + '%';
+        });
+
+        completed++;
+      }
+
+      el('success-title').textContent = total === 1 ? 'Shared' : `${total} items shared`;
+      clearBatch();
       showView('success');
     } catch (err) {
-      el('error-message').textContent =
-        'That upload didn\'t go through — check your connection and try again.';
-      showView('error');
+      showError('Something didn\'t upload — check your connection and try again. Anything already shared is safe.');
     } finally {
-      el('btn-upload').disabled = false;
-      el('btn-cancel').disabled = false;
+      el('btn-review-share').disabled = false;
+      el('btn-review-cancel').disabled = false;
+      el('btn-review-share').textContent = 'Share it';
     }
   });
 
-  function uploadWithProgress(url, file) {
+  function uploadWithProgress(url, blob, onProgress) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('PUT', url);
       xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
-      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+      xhr.setRequestHeader('Content-Type', blob.type || 'application/octet-stream');
 
       xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          const pct = Math.round((e.loaded / e.total) * 100);
-          el('progress-fill').style.width = pct + '%';
-          el('progress-text').textContent = `Uploading… ${pct}%`;
+        if (e.lengthComputable && onProgress) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
         }
       };
 
@@ -490,9 +1183,13 @@
         else reject(new Error('Upload failed with status ' + xhr.status));
       };
       xhr.onerror = () => reject(new Error('Network error during upload.'));
-      xhr.send(file);
+      xhr.send(blob);
     });
   }
+
+  window.addEventListener('beforeunload', () => {
+    if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+  });
 </script>
 
 </body>
