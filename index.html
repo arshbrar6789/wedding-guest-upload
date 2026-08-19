@@ -443,12 +443,6 @@
 
   #zoom-indicator.visible { opacity: 1; }
 
-  #btn-torch {
-    position: absolute;
-    top: max(16px, env(safe-area-inset-top));
-    right: 16px;
-  }
-
   #btn-torch.hidden-control { display: none; }
   #btn-torch.active svg { fill: var(--brass-bright); }
 
@@ -501,6 +495,30 @@
     background: linear-gradient(to top, rgba(0,0,0,0.55), transparent);
     position: relative;
     z-index: 2;
+  }
+
+  .zoom-presets {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    min-height: 30px;
+  }
+
+  .zoom-preset {
+    all: unset;
+    cursor: pointer;
+    padding: 6px 13px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ivory);
+    background: rgba(0,0,0,0.4);
+    transition: all 0.15s ease;
+  }
+
+  .zoom-preset.active {
+    color: var(--forest-deep);
+    background: var(--brass-bright);
   }
 
   .mode-toggle {
@@ -773,6 +791,8 @@
   </div>
 
   <div class="camera-bottom">
+    <div class="zoom-presets" id="zoom-presets"></div>
+
     <div class="mode-toggle">
       <button class="mode-pill active" id="mode-photo" data-mode="photo">Photo</button>
       <button class="mode-pill" id="mode-video" data-mode="video">Video</button>
@@ -982,7 +1002,7 @@
     updateItemCounter();
     renderLastShot();
     currentZoom = 1;
-    updateZoomVisual();
+    el('camera-video').style.transform = 'scale(1)';
     enableZoomBlock();
     await startCameraStream(currentFacingMode);
   }
@@ -1023,7 +1043,10 @@
     torchBtn.classList.add('hidden-control');
     torchBtn.classList.remove('active');
 
-    if (typeof track.getCapabilities !== 'function') return; // Safari/older browsers: no capability introspection
+    if (typeof track.getCapabilities !== 'function') {
+      renderZoomPresets(); // still show digital-zoom presets even without capability introspection
+      return;
+    }
 
     const caps = track.getCapabilities();
 
@@ -1034,6 +1057,8 @@
     if (caps.torch) {
       torchBtn.classList.remove('hidden-control');
     }
+
+    renderZoomPresets();
   }
 
   el('btn-torch').addEventListener('click', async () => {
@@ -1048,13 +1073,20 @@
     }
   });
 
-  function updateZoomVisual() {
-    el('camera-video').style.transform = `scale(${currentZoom})`;
+  // Updates the on-screen "1.5x" label only — safe to call regardless of zoom method.
+  function updateZoomLabel() {
     const indicator = el('zoom-indicator');
     indicator.textContent = `${currentZoom.toFixed(1)}x`;
     indicator.classList.add('visible');
-    clearTimeout(updateZoomVisual._t);
-    updateZoomVisual._t = setTimeout(() => indicator.classList.remove('visible'), 900);
+    clearTimeout(updateZoomLabel._t);
+    updateZoomLabel._t = setTimeout(() => indicator.classList.remove('visible'), 900);
+  }
+
+  // Applies the CSS visual scale — ONLY for digital zoom (no hardware support).
+  // When real hardware zoom is available, the camera sensor itself already reframed the
+  // shot, so applying a CSS scale on top would double-zoom and cause the black-bar artifacts.
+  function applyDigitalZoomVisual() {
+    el('camera-video').style.transform = `scale(${currentZoom})`;
   }
 
   function distanceBetween(t1, t2) {
@@ -1086,16 +1118,58 @@
       currentZoom = target;
 
       if (zoomCapabilities && videoTrack) {
-        // Hardware zoom (real optical/sensor zoom) where the device supports it
+        // Hardware zoom (real optical/sensor zoom) — sensor reframes, no CSS transform needed
         videoTrack.applyConstraints({ advanced: [{ zoom: currentZoom }] }).catch(() => {});
+      } else {
+        // Digital fallback — we crop/scale visually since there's no hardware zoom to lean on
+        applyDigitalZoomVisual();
       }
-      updateZoomVisual();
+      updateZoomLabel();
     }
   }, { passive: false });
 
   streamWrap.addEventListener('touchend', (e) => {
     if (e.touches.length < 2) pinchStartDist = null;
   });
+
+  // ---- Tap-to-set zoom presets (simpler alternative to a full drag wheel) ----
+  function setZoomLevel(level) {
+    const maxZoom = zoomCapabilities ? zoomCapabilities.max : digitalZoomMax;
+    const minZoom = zoomCapabilities ? zoomCapabilities.min || 1 : 1;
+    currentZoom = Math.min(maxZoom, Math.max(minZoom, level));
+
+    if (zoomCapabilities && videoTrack) {
+      videoTrack.applyConstraints({ advanced: [{ zoom: currentZoom }] }).catch(() => {});
+    } else {
+      applyDigitalZoomVisual();
+    }
+    updateZoomLabel();
+    renderZoomPresets();
+  }
+
+  function renderZoomPresets() {
+    const container = el('zoom-presets');
+    if (currentMode === 'video' && !zoomCapabilities) {
+      container.classList.add('hidden');
+      return;
+    }
+    container.classList.remove('hidden');
+
+    const maxZoom = zoomCapabilities ? zoomCapabilities.max : digitalZoomMax;
+    const minZoom = zoomCapabilities ? zoomCapabilities.min || 1 : 1;
+    const levels = [0.5, 1, 2, 3].filter(l => l >= minZoom && l <= maxZoom);
+    if (!levels.includes(1) && minZoom <= 1 && maxZoom >= 1) levels.unshift(1);
+
+    container.innerHTML = '';
+    levels.sort((a, b) => a - b).forEach(level => {
+      const btn = document.createElement('button');
+      btn.className = 'zoom-preset';
+      if (Math.abs(currentZoom - level) < 0.05) btn.classList.add('active');
+      btn.textContent = level === 1 ? '1x' : `${level}x`;
+      btn.addEventListener('click', () => setZoomLevel(level));
+      container.appendChild(btn);
+    });
+  }
 
   function closeCamera() {
     disableZoomBlock();
@@ -1146,6 +1220,7 @@
       currentZoom = 1;
       el('camera-video').style.transform = 'scale(1)';
     }
+    renderZoomPresets();
   }
 
   // Shutter
