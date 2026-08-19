@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Share the Moment</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -408,6 +408,7 @@
     position: relative;
     overflow: hidden;
     background: #000;
+    touch-action: none;
   }
 
   #camera-video {
@@ -415,7 +416,36 @@
     height: 100%;
     object-fit: cover;
     display: block;
+    transform-origin: center center;
+    touch-action: none;
   }
+
+  #zoom-indicator {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.5);
+    color: var(--ivory);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 999px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+  }
+
+  #zoom-indicator.visible { opacity: 1; }
+
+  #btn-torch {
+    position: absolute;
+    top: max(16px, env(safe-area-inset-top));
+    right: 16px;
+  }
+
+  #btn-torch.hidden-control { display: none; }
+  #btn-torch.active svg { fill: var(--brass-bright); }
 
   #rec-timer {
     position: absolute;
@@ -731,6 +761,10 @@
     <video id="camera-video" autoplay muted playsinline></video>
     <div id="rec-timer">0:00</div>
     <div id="camera-flash"></div>
+    <div id="zoom-indicator">1.0x</div>
+    <button class="icon-btn hidden-control" id="btn-torch">
+      <svg viewBox="0 0 24 24"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"/></svg>
+    </button>
   </div>
 
   <div class="camera-bottom">
@@ -755,7 +789,7 @@
 <script>
 (function() {
   // ---- Post-event switch: show a static thank-you page once the wedding weekend has passed ----
-  const WEDDING_DATE = new Date('2026-09-13T00:00:00');
+  const WEDDING_DATE = new Date('2026-09-15T00:00:00');
   const SHOW_THANKYOU_AFTER = new Date(WEDDING_DATE.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days after
 
   if (new Date() > SHOW_THANKYOU_AFTER) {
@@ -892,11 +926,21 @@
   let recordSeconds = 0;
   let currentMode = 'photo';
 
+  // Zoom state
+  let videoTrack = null;
+  let zoomCapabilities = null; // hardware zoom range, if the device/browser supports it
+  let currentZoom = 1;
+  let digitalZoomMax = 3; // fallback cap when hardware zoom isn't available
+  let pinchStartDist = null;
+  let pinchStartZoom = 1;
+
   async function openCamera() {
     showView(null);
     el('view-camera').classList.remove('hidden');
     updateItemCounter();
     renderThumbStrip();
+    currentZoom = 1;
+    updateZoomVisual();
 
     try {
       mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -908,11 +952,94 @@
         audio: true
       });
       el('camera-video').srcObject = mediaStream;
+
+      videoTrack = mediaStream.getVideoTracks()[0];
+      setupZoomAndTorch(videoTrack);
     } catch (err) {
       closeCamera();
       showError('Could not access the camera. You can still add photos or videos using the Gallery button.');
     }
   }
+
+  function setupZoomAndTorch(track) {
+    zoomCapabilities = null;
+    const torchBtn = el('btn-torch');
+    torchBtn.classList.add('hidden-control');
+    torchBtn.classList.remove('active');
+
+    if (typeof track.getCapabilities !== 'function') return; // Safari/older browsers: no capability introspection
+
+    const caps = track.getCapabilities();
+
+    if (caps.zoom) {
+      zoomCapabilities = caps.zoom; // { min, max, step } — hardware zoom is available (mainly Android Chrome)
+    }
+
+    if (caps.torch) {
+      torchBtn.classList.remove('hidden-control');
+    }
+  }
+
+  el('btn-torch').addEventListener('click', async () => {
+    if (!videoTrack) return;
+    const torchBtn = el('btn-torch');
+    const turningOn = !torchBtn.classList.contains('active');
+    try {
+      await videoTrack.applyConstraints({ advanced: [{ torch: turningOn }] });
+      torchBtn.classList.toggle('active', turningOn);
+    } catch (err) {
+      // Device claimed torch support but rejected the constraint — fail silently, button stays off
+    }
+  });
+
+  function updateZoomVisual() {
+    el('camera-video').style.transform = `scale(${currentZoom})`;
+    const indicator = el('zoom-indicator');
+    indicator.textContent = `${currentZoom.toFixed(1)}x`;
+    indicator.classList.add('visible');
+    clearTimeout(updateZoomVisual._t);
+    updateZoomVisual._t = setTimeout(() => indicator.classList.remove('visible'), 900);
+  }
+
+  function distanceBetween(t1, t2) {
+    return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+  }
+
+  const streamWrap = document.querySelector('.camera-stream-wrap');
+
+  streamWrap.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      pinchStartDist = distanceBetween(e.touches[0], e.touches[1]);
+      pinchStartZoom = currentZoom;
+    }
+  }, { passive: true });
+
+  streamWrap.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && pinchStartDist) {
+      // Digital zoom only changes what's on screen, not what MediaRecorder captures —
+      // so without real hardware zoom, skip it in video mode to avoid a misleading preview.
+      if (currentMode === 'video' && !zoomCapabilities) return;
+
+      e.preventDefault();
+      const newDist = distanceBetween(e.touches[0], e.touches[1]);
+      const ratio = newDist / pinchStartDist;
+      const maxZoom = zoomCapabilities ? zoomCapabilities.max : digitalZoomMax;
+      const minZoom = zoomCapabilities ? zoomCapabilities.min || 1 : 1;
+      let target = pinchStartZoom * ratio;
+      target = Math.min(maxZoom, Math.max(minZoom, target));
+      currentZoom = target;
+
+      if (zoomCapabilities && videoTrack) {
+        // Hardware zoom (real optical/sensor zoom) where the device supports it
+        videoTrack.applyConstraints({ advanced: [{ zoom: currentZoom }] }).catch(() => {});
+      }
+      updateZoomVisual();
+    }
+  }, { passive: false });
+
+  streamWrap.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) pinchStartDist = null;
+  });
 
   function closeCamera() {
     if (mediaStream) {
@@ -923,6 +1050,10 @@
       mediaRecorder.stop();
     }
     stopRecordTimer();
+    videoTrack = null;
+    zoomCapabilities = null;
+    currentZoom = 1;
+    el('camera-video').style.transform = 'scale(1)';
     el('view-camera').classList.add('hidden');
   }
 
@@ -952,6 +1083,11 @@
     currentMode = mode;
     el('mode-photo').classList.toggle('active', mode === 'photo');
     el('mode-video').classList.toggle('active', mode === 'video');
+
+    if (mode === 'video' && !zoomCapabilities && currentZoom > 1) {
+      currentZoom = 1;
+      el('camera-video').style.transform = 'scale(1)';
+    }
   }
 
   // Shutter
@@ -980,10 +1116,21 @@
   function capturePhoto() {
     const video = el('camera-video');
     const canvas = el('capture-canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+
+    // If zoom is hardware-applied, the sensor itself already framed the zoomed shot — capture as-is.
+    // If it's digital (CSS-scaled preview only), crop the center region to match what was seen on screen.
+    const useDigitalCrop = !zoomCapabilities && currentZoom > 1;
+    const cropW = useDigitalCrop ? vw / currentZoom : vw;
+    const cropH = useDigitalCrop ? vh / currentZoom : vh;
+    const cropX = (vw - cropW) / 2;
+    const cropY = (vh - cropH) / 2;
+
+    canvas.width = vw;
+    canvas.height = vh;
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
 
     // flash effect
     const flash = el('camera-flash');
