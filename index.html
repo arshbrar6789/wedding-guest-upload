@@ -762,10 +762,15 @@
 
 <div class="card">
 
+  <!-- LOADING (shown while we check the event link) -->
+  <div id="view-loading">
+    <p class="sub" style="margin-bottom:0;">Loading&hellip;</p>
+  </div>
+
   <!-- LANDING -->
-  <div id="view-landing">
-    <div class="names"><span>Arsh</span><span class="amp">&amp;</span><span>Meghna</span></div>
-    <div class="date-line">September 2026</div>
+  <div id="view-landing" class="hidden">
+    <div class="names" id="event-name-display">&nbsp;</div>
+    <div class="date-line" id="event-date-display"></div>
     <h1>Share the<br>Moment</h1>
     <p class="sub">Capture up to 20 photos, or a video up to 25 seconds. Review before sharing.</p>
 
@@ -797,6 +802,12 @@
     <div class="seal-caption" id="live-count" style="margin-top: 4px; color: var(--brass-bright); font-weight: 600;"></div>
 
     <input type="file" id="input-gallery" accept="image/*,video/*" multiple>
+  </div>
+
+  <!-- INVALID EVENT LINK -->
+  <div id="view-invalid-event" class="hidden">
+    <h1 style="font-size: 28px;">Link Not Found</h1>
+    <p class="sub" id="invalid-event-message">This event link doesn't look right. Please double-check the link or QR code you were given.</p>
   </div>
 
   <!-- ERROR -->
@@ -895,45 +906,41 @@
 
 <script>
 (function() {
-  // ---- Post-event switch: show a static thank-you page once the wedding weekend has passed ----
-  const WEDDING_DATE = new Date('2026-09-15T00:00:00');
-  const SHOW_THANKYOU_AFTER = new Date(WEDDING_DATE.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days after
-
-  if (new Date() > SHOW_THANKYOU_AFTER) {
-    document.body.innerHTML = `
-      <div class="card">
-        <div class="success-seal">
-          <svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
-        </div>
-        <h1 style="font-size: 30px;">With Love,<br>Thank You</h1>
-        <p class="sub">The celebration may be over, but we're so grateful you were part of it. Uploads are now closed &mdash; we can't wait for you to see the photos!</p>
-      </div>
-    `;
-    return;
-  }
-
   // ====== CONFIG ======
   const CONFIG = {
+    VALIDATE_EVENT_URL: 'https://wedding-upload-func-13457.azurewebsites.net/api/validate-event',
     SAS_FUNCTION_URL: 'https://wedding-upload-func-13457.azurewebsites.net/api/get-upload-url',
     STATS_FUNCTION_URL: 'https://wedding-upload-func-13457.azurewebsites.net/api/get-stats',
     MAX_VIDEO_SECONDS: 25,
     MAX_ITEMS: 20,
+    THANKYOU_DAYS_AFTER_EVENT: 3, // how many days after event_date this page auto-switches to a thank-you message
   };
   // =====================
 
   const el = (id) => document.getElementById(id);
+
+  // This page is shared by every client — the ?event=slug in the URL says which one.
+  const urlParams = new URLSearchParams(window.location.search);
+  const eventSlug = urlParams.get('event');
 
   const views = {
     landing: el('view-landing'),
     error: el('view-error'),
     review: el('view-review'),
     success: el('view-success'),
+    invalidEvent: el('view-invalid-event'),
   };
 
   function showView(name) {
+    el('view-loading').classList.add('hidden');
     Object.values(views).forEach(v => v.classList.add('hidden'));
     el('view-camera').classList.add('hidden');
     if (views[name]) views[name].classList.remove('hidden');
+  }
+
+  function showInvalidEvent(message) {
+    if (message) el('invalid-event-message').textContent = message;
+    showView('invalidEvent');
   }
 
   function showError(message) {
@@ -942,6 +949,53 @@
   }
 
   el('btn-error-retry').addEventListener('click', () => showView('landing'));
+
+  // ---- Validate the event link before showing anything else ----
+  if (!eventSlug) {
+    showInvalidEvent("This page needs an event link to work — please use the link or QR code your host gave you.");
+    return;
+  }
+
+  fetch(`${CONFIG.VALIDATE_EVENT_URL}?event=${encodeURIComponent(eventSlug)}`)
+    .then(res => {
+      if (!res.ok) throw new Error('invalid');
+      return res.json();
+    })
+    .then(eventInfo => {
+      initApp(eventInfo);
+    })
+    .catch(() => {
+      showInvalidEvent();
+    });
+
+  function initApp(eventInfo) {
+    // ---- Post-event switch: show a static thank-you page once the event has passed ----
+    const eventDate = new Date(eventInfo.event_date);
+    const showThankYouAfter = new Date(eventDate.getTime() + CONFIG.THANKYOU_DAYS_AFTER_EVENT * 24 * 60 * 60 * 1000);
+
+    if (!isNaN(eventDate.getTime()) && new Date() > showThankYouAfter) {
+      document.body.innerHTML = `
+        <div class="card">
+          <div class="success-seal">
+            <svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
+          </div>
+          <h1 style="font-size: 30px;">With Love,<br>Thank You</h1>
+          <p class="sub">The celebration may be over, but we're so grateful you were part of it. Uploads are now closed &mdash; we can't wait for you to see the photos!</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Fill in this event's name/date, then reveal the normal landing page
+    el('event-name-display').textContent = eventInfo.event_name || '';
+    if (!isNaN(eventDate.getTime())) {
+      el('event-date-display').textContent = eventDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
+    }
+    showView('landing');
+    runApp(eventInfo);
+  }
+
+  function runApp(eventInfo) {
 
   // ---- Batch state ----
   // Each item: { id, kind: 'photo'|'video', blob, url }
@@ -1629,7 +1683,7 @@
         const hash = item.kind === 'photo' ? await hashBlob(item.blob) : null;
         const hashParam = hash ? `&hash=${hash}` : '';
 
-        const res = await fetch(`${CONFIG.SAS_FUNCTION_URL}?ext=${encodeURIComponent(ext)}${hashParam}`);
+        const res = await fetch(`${CONFIG.SAS_FUNCTION_URL}?event=${encodeURIComponent(eventSlug)}&ext=${encodeURIComponent(ext)}${hashParam}`);
         if (!res.ok) throw new Error('Could not get an upload link.');
         const { uploadUrl } = await res.json();
 
@@ -1725,7 +1779,7 @@
   });
 
   // ---- Live guest count ----
-  fetch(CONFIG.STATS_FUNCTION_URL)
+  fetch(`${CONFIG.STATS_FUNCTION_URL}?event=${encodeURIComponent(eventSlug)}`)
     .then(res => res.ok ? res.json() : null)
     .then(data => {
       if (data && typeof data.count === 'number' && data.count > 0) {
@@ -1733,6 +1787,8 @@
       }
     })
     .catch(() => { /* fail silently, purely decorative */ });
+
+  } // end runApp
 
 })();
 </script>
