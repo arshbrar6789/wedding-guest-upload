@@ -47,7 +47,7 @@
     align-items: center;
     justify-content: center;
     min-height: 100dvh;
-    padding: max(270px, calc(env(safe-area-inset-top) + 250px)) 20px max(24px, env(safe-area-inset-bottom));
+    padding: clamp(70px, 22dvh, 165px) 20px clamp(10px, 2dvh, 20px);
     overflow-x: hidden;
     position: relative;
   }
@@ -75,10 +75,10 @@
     font-family: 'Playfair Display', serif;
     font-style: italic;
     font-weight: 700;
-    font-size: clamp(30px, 8.5vw, 44px);
+    font-size: clamp(26px, 8.5vw, 44px);
     line-height: 1.15;
-    margin-bottom: 8px;
-    margin-top: 12px;
+    margin-bottom: clamp(2px, 1dvh, 8px);
+    margin-top: clamp(0px, 1dvh, 12px);
     background: linear-gradient(100deg, var(--brass) 20%, var(--brass-bright) 40%, #fff6de 50%, var(--brass-bright) 60%, var(--brass) 80%);
     background-size: 250% 100%;
     -webkit-background-clip: text;
@@ -95,27 +95,27 @@
 
   .date-line {
     font-family: 'Fraunces', serif;
-    font-size: clamp(17px, 4.2vw, 21px);
+    font-size: clamp(15px, 4.2vw, 21px);
     font-weight: 500;
     letter-spacing: 0.04em;
     color: var(--brass-bright);
-    margin-bottom: 20px;
+    margin-bottom: clamp(6px, 2dvh, 20px);
   }
 
   h1 {
     font-family: 'Fraunces', serif;
     font-optical-sizing: auto;
     font-weight: 500;
-    font-size: clamp(32px, 8vw, 42px);
+    font-size: clamp(26px, 8vw, 42px);
     line-height: 1.1;
-    margin-bottom: 12px;
+    margin-bottom: clamp(4px, 1.5dvh, 12px);
   }
 
   .sub {
-    font-size: 15px;
+    font-size: clamp(12px, 3vw, 15px);
     color: var(--sage);
-    line-height: 1.5;
-    margin-bottom: 40px;
+    line-height: 1.4;
+    margin-bottom: clamp(10px, 3dvh, 40px);
     max-width: 320px;
   }
 
@@ -126,7 +126,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: clamp(2px, 1dvh, 8px);
   }
 
   .sparkle {
@@ -150,8 +150,8 @@
   }
 
   .chain-cross {
-    width: 170px;
-    height: 46px;
+    width: clamp(110px, 22dvh, 170px);
+    height: clamp(30px, 6dvh, 46px);
     display: block;
     position: relative;
     z-index: 1;
@@ -161,7 +161,7 @@
     position: relative;
     z-index: 1;
     display: flex;
-    gap: 26px;
+    gap: clamp(14px, 4vw, 26px);
     justify-content: center;
     margin-top: -4px;
   }
@@ -172,7 +172,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: clamp(4px, 1dvh, 10px);
   }
 
   .medallion-glow {
@@ -192,8 +192,8 @@
 
   .medallion-wrap {
     position: relative;
-    width: 96px;
-    height: 96px;
+    width: clamp(64px, 13dvh, 96px);
+    height: clamp(64px, 13dvh, 96px);
   }
 
   .medallion-svg {
@@ -210,7 +210,7 @@
   }
 
   .medallion-label {
-    font-size: 15px;
+    font-size: clamp(12px, 3vw, 15px);
     font-weight: 700;
     color: var(--ivory);
     text-shadow: 0 1px 6px rgba(0,0,0,0.5);
@@ -219,7 +219,7 @@
   .seal-caption {
     font-size: 11.5px;
     color: var(--sage);
-    margin-top: 12px;
+    margin-top: clamp(4px, 1dvh, 12px);
     text-shadow: 0 1px 4px rgba(0,0,0,0.5);
   }
 
