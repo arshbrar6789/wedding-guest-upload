@@ -6,7 +6,7 @@
 <title>Share the Moment</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Playfair+Display:ital,wght@1,600;1,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 
@@ -29,6 +29,16 @@
     background: var(--forest-deep);
   }
 
+  .bg-layer {
+    position: fixed;
+    inset: 0;
+    background-image: url('hero-bg.jpg');
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    z-index: 0;
+  }
+
   body {
     font-family: 'Inter', sans-serif;
     color: var(--ivory);
@@ -37,11 +47,9 @@
     align-items: center;
     justify-content: center;
     min-height: 100dvh;
-    padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
-    background:
-      radial-gradient(circle at 50% 0%, rgba(201,163,78,0.10), transparent 55%),
-      var(--forest);
+    padding: max(40px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
     overflow-x: hidden;
+    position: relative;
   }
 
   .card {
@@ -51,6 +59,8 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
+    position: relative;
+    z-index: 1;
   }
 
   .eyebrow {
@@ -62,34 +72,20 @@
   }
 
   .names {
-    font-family: 'Fraunces', serif;
+    font-family: 'Playfair Display', serif;
     font-style: italic;
-    font-weight: 500;
-    font-size: clamp(26px, 7vw, 34px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 10px;
+    font-weight: 700;
+    font-size: clamp(30px, 8.5vw, 44px);
+    line-height: 1.15;
+    margin-bottom: 8px;
+    margin-top: 12px;
     background: linear-gradient(100deg, var(--brass) 20%, var(--brass-bright) 40%, #fff6de 50%, var(--brass-bright) 60%, var(--brass) 80%);
     background-size: 250% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     animation: shimmer 5s linear infinite;
-  }
-
-  .names .amp {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-weight: 400;
-    font-size: 0.7em;
-    color: var(--sage);
-    background: none;
-    -webkit-background-clip: unset;
-    background-clip: unset;
-    transform: translateY(-1px) rotate(-4deg);
-    display: inline-block;
+    text-shadow: 0 2px 20px rgba(201,163,78,0.25);
   }
 
   @keyframes shimmer {
@@ -98,11 +94,12 @@
   }
 
   .date-line {
-    font-size: 12px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--sage);
-    margin-bottom: 14px;
+    font-family: 'Fraunces', serif;
+    font-size: clamp(17px, 4.2vw, 21px);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--brass-bright);
+    margin-bottom: 20px;
   }
 
   h1 {
@@ -127,34 +124,9 @@
     position: relative;
     width: 100%;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     margin-bottom: 8px;
-  }
-
-  .ambient-glow {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 280px;
-    height: 280px;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(201,163,78,0.22), transparent 70%);
-    filter: blur(6px);
-    animation: breathe 4.5s ease-in-out infinite;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .ambient-glow.delay {
-    animation-delay: 2.2s;
-    width: 220px;
-    height: 220px;
-  }
-
-  @keyframes breathe {
-    0%, 100% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.5; }
-    50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.9; }
   }
 
   .sparkle {
@@ -177,89 +149,78 @@
     100% { opacity: 0; transform: translateY(-130px) scale(1); }
   }
 
-  .seal-row {
+  .chain-cross {
+    width: 170px;
+    height: 46px;
+    display: block;
+    position: relative;
+    z-index: 1;
+  }
+
+  .medallion-row {
     position: relative;
     z-index: 1;
     display: flex;
-    gap: 20px;
+    gap: 26px;
     justify-content: center;
+    margin-top: -4px;
   }
 
-  .seal-btn {
+  .medallion-btn {
     all: unset;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
   }
 
-  .seal {
-    width: 104px;
-    height: 104px;
+  .medallion-glow {
+    position: absolute;
+    inset: -14px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, var(--brass-bright), var(--brass) 60%, #9c7c34 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow:
-      0 10px 24px rgba(0,0,0,0.35),
-      inset 0 2px 4px rgba(255,255,255,0.35),
-      inset 0 -6px 10px rgba(0,0,0,0.25);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    background: radial-gradient(circle, rgba(224,190,114,0.35), transparent 70%);
+    filter: blur(8px);
+    animation: breathe 4s ease-in-out infinite;
+    z-index: 0;
+  }
+
+  @keyframes breathe {
+    0%, 100% { opacity: 0.5; transform: scale(0.9); }
+    50% { opacity: 0.9; transform: scale(1.08); }
+  }
+
+  .medallion-wrap {
     position: relative;
+    width: 96px;
+    height: 96px;
   }
 
-  .seal::before {
-    content: '';
-    position: absolute;
-    inset: 6px;
-    border-radius: 50%;
-    border: 1.5px dashed rgba(22,38,30,0.35);
-  }
-
-  .seal::after {
-    content: '';
-    position: absolute;
-    inset: -6px;
-    border-radius: 50%;
-    border: 1.5px solid rgba(201,163,78,0.5);
-    animation: pulse-ring 2.6s ease-out infinite;
-  }
-
-  .seal-btn:nth-child(2) .seal::after { animation-delay: 0.9s; }
-
-  @keyframes pulse-ring {
-    0% { transform: scale(0.9); opacity: 0.8; }
-    80% { transform: scale(1.35); opacity: 0; }
-    100% { transform: scale(1.35); opacity: 0; }
-  }
-
-  .seal svg {
-    width: 38px;
-    height: 38px;
-    fill: var(--forest-deep);
+  .medallion-svg {
+    width: 100%;
+    height: 100%;
     position: relative;
     z-index: 1;
+    filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4));
+    transition: transform 0.15s ease;
   }
 
-  .seal-btn:active .seal {
+  .medallion-btn:active .medallion-svg {
     transform: scale(0.94);
-    box-shadow:
-      0 4px 10px rgba(0,0,0,0.35),
-      inset 0 2px 4px rgba(255,255,255,0.25),
-      inset 0 -3px 6px rgba(0,0,0,0.3);
   }
 
-  .seal-label {
-    font-size: 14px;
-    font-weight: 600;
+  .medallion-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ivory);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
   }
 
   .seal-caption {
     font-size: 11.5px;
     color: var(--sage);
-    margin-top: 8px;
+    margin-top: 12px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
   }
 
   input[type="file"] { display: none; }
@@ -760,6 +721,22 @@
 </head>
 <body>
 
+<div class="bg-layer"></div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <radialGradient id="medallionGold" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#E0BE72"/>
+      <stop offset="55%" stop-color="#C9A34E"/>
+      <stop offset="100%" stop-color="#9c7c34"/>
+    </radialGradient>
+    <radialGradient id="medallionPearl" cx="40%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#FFFDF7"/>
+      <stop offset="100%" stop-color="#E8E0CC"/>
+    </radialGradient>
+  </defs>
+</svg>
+
 <div class="card">
 
   <!-- LOADING (shown while we check the event link) -->
@@ -775,26 +752,29 @@
     <p class="sub">Capture up to 20 photos, or a video up to 25 seconds. Review before sharing.</p>
 
     <div class="seal-stage">
-      <div class="ambient-glow"></div>
-      <div class="ambient-glow delay"></div>
       <div class="sparkle" style="left: 22%; top: 70%; animation-delay: 0s;"></div>
       <div class="sparkle" style="left: 75%; top: 65%; animation-delay: 1.4s;"></div>
       <div class="sparkle" style="left: 50%; top: 80%; animation-delay: 2.6s;"></div>
       <div class="sparkle" style="left: 35%; top: 60%; animation-delay: 3.5s;"></div>
       <div class="sparkle" style="left: 65%; top: 75%; animation-delay: 0.8s;"></div>
-      <div class="seal-row">
-        <button class="seal-btn" id="btn-camera">
-          <span class="seal">
-            <svg viewBox="0 0 24 24"><path d="M9 3l-1.6 2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.4L15 3H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>
-          </span>
-          <span class="seal-label">Camera</span>
+
+      <svg class="chain-cross" viewBox="0 0 170 46" id="chain-cross-svg"></svg>
+
+      <div class="medallion-row">
+        <button class="medallion-btn" id="btn-camera">
+          <div class="medallion-wrap">
+            <div class="medallion-glow"></div>
+            <div class="medallion-svg" id="medallion-camera"></div>
+          </div>
+          <span class="medallion-label">Camera</span>
         </button>
 
-        <button class="seal-btn" id="btn-gallery">
-          <span class="seal">
-            <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-          </span>
-          <span class="seal-label">Gallery</span>
+        <button class="medallion-btn" id="btn-gallery">
+          <div class="medallion-wrap">
+            <div class="medallion-glow"></div>
+            <div class="medallion-svg" id="medallion-gallery"></div>
+          </div>
+          <span class="medallion-label">Gallery</span>
         </button>
       </div>
     </div>
@@ -918,6 +898,69 @@
   // =====================
 
   const el = (id) => document.getElementById(id);
+
+  // ---- Build the ornate scalloped medallions precisely via math, rather than
+  // hand-typed SVG path coordinates (guarantees a clean, evenly-spaced flower edge) ----
+  function buildMedallionSVG(iconViewBox, iconPath) {
+    const cx = 50, cy = 50;
+    const petalRingRadius = 42;
+    const petalRadius = 11;
+    const petalCount = 14;
+    const mainRadius = 36;
+    const pearlRadius = 28;
+    const beadRadius = 30.5;
+    const beadCount = 26;
+    const beadDotRadius = 1.1;
+
+    let petals = '';
+    for (let i = 0; i < petalCount; i++) {
+      const angle = (i / petalCount) * Math.PI * 2;
+      const px = cx + petalRingRadius * Math.cos(angle);
+      const py = cy + petalRingRadius * Math.sin(angle);
+      petals += `<circle cx="${px.toFixed(2)}" cy="${py.toFixed(2)}" r="${petalRadius}" fill="url(#medallionGold)" />`;
+    }
+
+    let beads = '';
+    for (let i = 0; i < beadCount; i++) {
+      const angle = (i / beadCount) * Math.PI * 2;
+      const bx = cx + beadRadius * Math.cos(angle);
+      const by = cy + beadRadius * Math.sin(angle);
+      beads += `<circle cx="${bx.toFixed(2)}" cy="${by.toFixed(2)}" r="${beadDotRadius}" fill="#9c7c34" opacity="0.6" />`;
+    }
+
+    const iconSize = 36;
+    const iconX = cx - iconSize / 2;
+    const iconY = cy - iconSize / 2;
+
+    return `
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        ${petals}
+        <circle cx="${cx}" cy="${cy}" r="${mainRadius}" fill="url(#medallionGold)" stroke="#7a5f26" stroke-width="0.5" />
+        <circle cx="${cx}" cy="${cy}" r="${pearlRadius}" fill="url(#medallionPearl)" stroke="#C9A34E" stroke-width="1.5" />
+        ${beads}
+        <svg x="${iconX}" y="${iconY}" width="${iconSize}" height="${iconSize}" viewBox="${iconViewBox}">
+          <path d="${iconPath}" fill="#5c4520" />
+        </svg>
+      </svg>
+    `;
+  }
+
+  const CAMERA_ICON_PATH = "M9 3l-1.6 2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.4L15 3H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 100 6 3 3 0 000-6z";
+  const GALLERY_ICON_PATH = "M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z";
+
+  function initMedallions() {
+    el('medallion-camera').innerHTML = buildMedallionSVG('0 0 24 24', CAMERA_ICON_PATH);
+    el('medallion-gallery').innerHTML = buildMedallionSVG('0 0 24 24', GALLERY_ICON_PATH);
+
+    // Crossing chains: each button's chain starts from the OPPOSITE side up top,
+    // so they cross in an X before reaching their medallion (matches the reference art).
+    const chainSvg = el('chain-cross-svg');
+    chainSvg.innerHTML = `
+      <line x1="120" y1="0" x2="35" y2="46" stroke="#C9A34E" stroke-width="1.8" opacity="0.85" />
+      <line x1="50" y1="0" x2="135" y2="46" stroke="#C9A34E" stroke-width="1.8" opacity="0.85" />
+    `;
+  }
+  initMedallions();
 
   // This page is shared by every client — the ?event=slug in the URL says which one.
   const urlParams = new URLSearchParams(window.location.search);
