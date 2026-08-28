@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Platform Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --forest: #16261E;
+    --forest-deep: #0E1B15;
+    --brass: #C9A34E;
+    --brass-bright: #E0BE72;
+    --ivory: #F6F1E7;
+    --sage: #7C9885;
+    --clay: #B5533C;
+    --radius: 20px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--forest-deep);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    color: var(--ivory);
+    min-height: 100vh;
+  }
+
+  h1, h2 { font-family: 'Fraunces', serif; }
+
+  /* ---- Login screen ---- */
+  #login-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    gap: 16px;
+    text-align: center;
+  }
+
+  #login-screen h1 {
+    font-size: 1.8rem;
+    font-weight: 500;
+    color: var(--brass-bright);
+  }
+
+  #login-screen input {
+    padding: 12px 16px;
+    font-size: 1rem;
+    border: 1px solid var(--brass);
+    background: var(--forest);
+    color: var(--ivory);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 280px;
+    font-family: inherit;
+  }
+
+  button {
+    padding: 10px 18px;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    transition: opacity 0.15s ease;
+  }
+
+  button:active { opacity: 0.75; }
+  button:disabled { opacity: 0.5; cursor: default; }
+
+  .btn-primary { background: var(--brass); color: var(--forest-deep); }
+  .btn-ghost { background: transparent; color: var(--ivory); border: 1px solid rgba(246,241,231,0.25); }
+  .btn-small { padding: 6px 12px; font-size: 0.78rem; }
+  .btn-danger { background: transparent; color: var(--clay); border: 1px solid var(--clay); }
+
+  #error-msg { color: var(--clay); font-size: 0.85rem; min-height: 1em; }
+
+  /* ---- Dashboard ---- */
+  #app { display: none; }
+  #app.visible { display: block; }
+
+  header {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 2px solid var(--brass);
+    background: var(--forest);
+  }
+
+  header h1 { font-size: 1.4rem; font-weight: 500; color: var(--brass-bright); }
+
+  main { padding: 16px; max-width: 800px; margin: 0 auto; }
+
+  .section {
+    background: var(--forest);
+    border-radius: var(--radius);
+    border: 1px solid rgba(201,163,78,0.25);
+    padding: 18px;
+    margin-bottom: 20px;
+  }
+
+  .section h2 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--brass-bright);
+    margin-bottom: 14px;
+  }
+
+  .field {
+    margin-bottom: 12px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--sage);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid rgba(201,163,78,0.4);
+    background: var(--forest-deep);
+    color: var(--ivory);
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+  }
+
+  .field input:focus {
+    outline: 2px solid var(--brass-bright);
+    outline-offset: 1px;
+  }
+
+  #create-result {
+    margin-top: 16px;
+    padding: 14px;
+    background: var(--forest-deep);
+    border-radius: 14px;
+    border: 1px solid rgba(201,163,78,0.3);
+  }
+
+  #create-result img {
+    display: block;
+    width: 140px;
+    height: 140px;
+    margin: 10px auto;
+    border-radius: 10px;
+    background: white;
+    padding: 8px;
+  }
+
+  .link-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.82rem;
+    word-break: break-all;
+  }
+
+  .link-row a { color: var(--brass-bright); }
+
+  #status-msg { font-size: 0.85rem; color: var(--sage); text-align: center; margin-bottom: 12px; }
+
+  .client-card {
+    background: var(--forest-deep);
+    border: 1px solid rgba(201,163,78,0.25);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  .client-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+
+  .client-card h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--ivory);
+  }
+
+  .client-card .meta {
+    font-size: 0.78rem;
+    color: var(--sage);
+    margin-top: 2px;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .badge.active { background: rgba(124,152,133,0.25); color: var(--sage); }
+  .badge.suspended { background: rgba(181,83,60,0.25); color: var(--clay); }
+
+  .client-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--sage);
+    font-size: 0.9rem;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <h1>Platform Admin</h1>
+  <input type="password" id="password-input" placeholder="Admin password" autocomplete="off">
+  <button class="btn-primary" id="login-btn">Enter</button>
+  <div id="error-msg"></div>
+</div>
+
+<div id="app">
+  <header><h1>Platform Admin</h1></header>
+  <main>
+
+    <div class="section">
+      <h2>Create New Client</h2>
+      <div class="field">
+        <label>Event Name</label>
+        <input type="text" id="new-event-name" placeholder="e.g. Arsh &amp; Meghna's Wedding">
+      </div>
+      <div class="field">
+        <label>Event Date</label>
+        <input type="date" id="new-event-date">
+      </div>
+      <div class="field">
+        <label>Client's Dashboard Password</label>
+        <input type="text" id="new-admin-password" placeholder="Password for this client's own dashboard">
+      </div>
+      <button class="btn-primary" id="create-btn">Create Client</button>
+      <div id="create-error" style="color: var(--clay); font-size: 0.85rem; margin-top: 8px;"></div>
+
+      <div id="create-result" class="hidden">
+        <div class="link-row"><strong>Guest link:</strong></div>
+        <div class="link-row"><a id="result-guest-url" href="#" target="_blank"></a> <button class="btn-small btn-ghost" id="copy-guest-url">Copy</button></div>
+        <div class="link-row"><strong>Dashboard link:</strong></div>
+        <div class="link-row"><a id="result-dashboard-url" href="#" target="_blank"></a> <button class="btn-small btn-ghost" id="copy-dashboard-url">Copy</button></div>
+        <img id="result-qr" src="" alt="QR code">
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>All Clients</h2>
+      <button class="btn-ghost btn-small" id="refresh-btn" style="margin-bottom: 14px;">Refresh</button>
+      <div id="status-msg"></div>
+      <div id="client-list"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const FUNCTION_BASE = "https://wedding-upload-func-13457.azurewebsites.net/api";
+  const GUEST_BASE_URL = "https://arshbrar6789.github.io/wedding-guest-upload/";
+
+  const el = (id) => document.getElementById(id);
+  let adminPassword = "";
+
+  el('login-btn').addEventListener('click', attemptLogin);
+  el('password-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') attemptLogin(); });
+  el('refresh-btn').addEventListener('click', loadClients);
+  el('create-btn').addEventListener('click', createClient);
+
+  async function attemptLogin() {
+    const password = el('password-input').value;
+    el('error-msg').textContent = "";
+    el('login-btn').disabled = true;
+    el('login-btn').textContent = "Checking…";
+
+    try {
+      const res = await fetch(`${FUNCTION_BASE}/list-clients`, {
+        headers: { 'X-Moderator-Password': password }
+      });
+      if (res.status === 401) {
+        el('error-msg').textContent = "Incorrect password.";
+        el('login-btn').disabled = false;
+        el('login-btn').textContent = "Enter";
+        return;
+      }
+      if (!res.ok) throw new Error('Server error');
+
+      adminPassword = password;
+      el('login-screen').style.display = 'none';
+      el('app').classList.add('visible');
+      const data = await res.json();
+      renderClients(data.clients || []);
+    } catch (err) {
+      el('error-msg').textContent = "Could not reach the server. Try again.";
+      el('login-btn').disabled = false;
+      el('login-btn').textContent = "Enter";
+    }
+  }
+
+  async function loadClients() {
+    el('status-msg').textContent = "Loading…";
+    try {
+      const res = await fetch(`${FUNCTION_BASE}/list-clients`, {
+        headers: { 'X-Moderator-Password': adminPassword }
+      });
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      renderClients(data.clients || []);
+    } catch (err) {
+      el('status-msg').textContent = "Failed to load. Try refreshing.";
+    }
+  }
+
+  function renderClients(clients) {
+    el('status-msg').textContent = "";
+    const list = el('client-list');
+    list.innerHTML = '';
+
+    if (clients.length === 0) {
+      list.innerHTML = `<div class="empty-state">No clients yet — create your first one above.</div>`;
+      return;
+    }
+
+    clients.sort((a, b) => (b.created_date || '').localeCompare(a.created_date || ''));
+
+    clients.forEach(client => {
+      const guestUrl = `${GUEST_BASE_URL}?event=${client.slug}`;
+      const dashUrl = `${GUEST_BASE_URL}client-admin.html?event=${client.slug}`;
+      const isActive = client.status === 'active';
+
+      const card = document.createElement('div');
+      card.className = 'client-card';
+      card.innerHTML = `
+        <div class="client-card-top">
+          <div>
+            <h3>${escapeHtml(client.event_name || 'Untitled Event')}</h3>
+            <div class="meta">${client.event_date ? formatDate(client.event_date) : ''} &middot; ${escapeHtml(client.slug)}</div>
+          </div>
+          <span class="badge ${isActive ? 'active' : 'suspended'}">${isActive ? 'Active' : 'Suspended'}</span>
+        </div>
+        <div class="client-actions">
+          <button class="btn-small btn-ghost" data-action="copy-guest">Copy Guest Link</button>
+          <button class="btn-small btn-ghost" data-action="open-dashboard">Open Dashboard</button>
+          <button class="btn-small btn-ghost" data-action="reset-password">Reset Password</button>
+          <button class="btn-small ${isActive ? 'btn-danger' : 'btn-primary'}" data-action="toggle-status">${isActive ? 'Suspend' : 'Reactivate'}</button>
+        </div>
+      `;
+
+      card.querySelector('[data-action="copy-guest"]').addEventListener('click', () => {
+        navigator.clipboard.writeText(guestUrl);
+      });
+      card.querySelector('[data-action="open-dashboard"]').addEventListener('click', () => {
+        window.open(dashUrl, '_blank');
+      });
+      card.querySelector('[data-action="reset-password"]').addEventListener('click', () => resetPassword(client.slug));
+      card.querySelector('[data-action="toggle-status"]').addEventListener('click', () => toggleStatus(client.slug, isActive));
+
+      list.appendChild(card);
+    });
+  }
+
+  async function resetPassword(slug) {
+    const newPassword = prompt("Enter a new dashboard password for this client:");
+    if (!newPassword) return;
+
+    try {
+      const res = await fetch(`${FUNCTION_BASE}/reset-client-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Moderator-Password': adminPassword
+        },
+        body: JSON.stringify({ slug, new_password: newPassword })
+      });
+      if (!res.ok) throw new Error('Failed');
+      alert("Password updated.");
+    } catch (err) {
+      alert("Could not reset the password. Try again.");
+    }
+  }
+
+  async function toggleStatus(slug, isCurrentlyActive) {
+    const newStatus = isCurrentlyActive ? 'suspended' : 'active';
+    try {
+      const res = await fetch(`${FUNCTION_BASE}/update-client-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Moderator-Password': adminPassword
+        },
+        body: JSON.stringify({ slug, status: newStatus })
+      });
+      if (!res.ok) throw new Error('Failed');
+      loadClients();
+    } catch (err) {
+      alert("Could not update status. Try again.");
+    }
+  }
+
+  async function createClient() {
+    const eventName = el('new-event-name').value.trim();
+    const eventDate = el('new-event-date').value;
+    const adminPw = el('new-admin-password').value;
+
+    el('create-error').textContent = "";
+
+    if (!eventName || !eventDate || !adminPw) {
+      el('create-error').textContent = "All fields are required.";
+      return;
+    }
+
+    el('create-btn').disabled = true;
+    el('create-btn').textContent = "Creating…";
+
+    try {
+      const res = await fetch(`${FUNCTION_BASE}/create-client`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Moderator-Password': adminPassword
+        },
+        body: JSON.stringify({ event_name: eventName, event_date: eventDate, admin_password: adminPw })
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to create client');
+      }
+
+      const data = await res.json();
+      const dashUrl = `${GUEST_BASE_URL}client-admin.html?event=${data.slug}`;
+
+      el('result-guest-url').textContent = data.guest_url;
+      el('result-guest-url').href = data.guest_url;
+      el('result-dashboard-url').textContent = dashUrl;
+      el('result-dashboard-url').href = dashUrl;
+      el('result-qr').src = `data:image/png;base64,${data.qr_code_base64}`;
+      el('create-result').classList.remove('hidden');
+
+      el('copy-guest-url').onclick = () => navigator.clipboard.writeText(data.guest_url);
+      el('copy-dashboard-url').onclick = () => navigator.clipboard.writeText(dashUrl);
+
+      el('new-event-name').value = '';
+      el('new-event-date').value = '';
+      el('new-admin-password').value = '';
+
+      loadClients();
+    } catch (err) {
+      el('create-error').textContent = err.message || "Something went wrong.";
+    } finally {
+      el('create-btn').disabled = false;
+      el('create-btn').textContent = "Create Client";
+    }
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+</script>
+
+</body>
+</html>
