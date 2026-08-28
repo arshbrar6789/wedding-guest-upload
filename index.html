@@ -723,20 +723,6 @@
 
 <div class="bg-layer"></div>
 
-<svg width="0" height="0" style="position:absolute">
-  <defs>
-    <radialGradient id="medallionGold" cx="35%" cy="30%" r="75%">
-      <stop offset="0%" stop-color="#E0BE72"/>
-      <stop offset="55%" stop-color="#C9A34E"/>
-      <stop offset="100%" stop-color="#9c7c34"/>
-    </radialGradient>
-    <radialGradient id="medallionPearl" cx="40%" cy="30%" r="70%">
-      <stop offset="0%" stop-color="#FFFDF7"/>
-      <stop offset="100%" stop-color="#E8E0CC"/>
-    </radialGradient>
-  </defs>
-</svg>
-
 <div class="card">
 
   <!-- LOADING (shown while we check the event link) -->
@@ -764,7 +750,7 @@
         <button class="medallion-btn" id="btn-camera">
           <div class="medallion-wrap">
             <div class="medallion-glow"></div>
-            <div class="medallion-svg" id="medallion-camera"></div>
+            <img class="medallion-svg" src="medallion-camera.png" alt="Camera">
           </div>
           <span class="medallion-label">Camera</span>
         </button>
@@ -772,7 +758,7 @@
         <button class="medallion-btn" id="btn-gallery">
           <div class="medallion-wrap">
             <div class="medallion-glow"></div>
-            <div class="medallion-svg" id="medallion-gallery"></div>
+            <img class="medallion-svg" src="medallion-gallery.png" alt="Gallery">
           </div>
           <span class="medallion-label">Gallery</span>
         </button>
@@ -899,68 +885,16 @@
 
   const el = (id) => document.getElementById(id);
 
-  // ---- Build the ornate scalloped medallions precisely via math, rather than
-  // hand-typed SVG path coordinates (guarantees a clean, evenly-spaced flower edge) ----
-  function buildMedallionSVG(iconViewBox, iconPath) {
-    const cx = 50, cy = 50;
-    const petalRingRadius = 42;
-    const petalRadius = 11;
-    const petalCount = 14;
-    const mainRadius = 36;
-    const pearlRadius = 28;
-    const beadRadius = 30.5;
-    const beadCount = 26;
-    const beadDotRadius = 1.1;
-
-    let petals = '';
-    for (let i = 0; i < petalCount; i++) {
-      const angle = (i / petalCount) * Math.PI * 2;
-      const px = cx + petalRingRadius * Math.cos(angle);
-      const py = cy + petalRingRadius * Math.sin(angle);
-      petals += `<circle cx="${px.toFixed(2)}" cy="${py.toFixed(2)}" r="${petalRadius}" fill="url(#medallionGold)" />`;
-    }
-
-    let beads = '';
-    for (let i = 0; i < beadCount; i++) {
-      const angle = (i / beadCount) * Math.PI * 2;
-      const bx = cx + beadRadius * Math.cos(angle);
-      const by = cy + beadRadius * Math.sin(angle);
-      beads += `<circle cx="${bx.toFixed(2)}" cy="${by.toFixed(2)}" r="${beadDotRadius}" fill="#9c7c34" opacity="0.6" />`;
-    }
-
-    const iconSize = 36;
-    const iconX = cx - iconSize / 2;
-    const iconY = cy - iconSize / 2;
-
-    return `
-      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        ${petals}
-        <circle cx="${cx}" cy="${cy}" r="${mainRadius}" fill="url(#medallionGold)" stroke="#7a5f26" stroke-width="0.5" />
-        <circle cx="${cx}" cy="${cy}" r="${pearlRadius}" fill="url(#medallionPearl)" stroke="#C9A34E" stroke-width="1.5" />
-        ${beads}
-        <svg x="${iconX}" y="${iconY}" width="${iconSize}" height="${iconSize}" viewBox="${iconViewBox}">
-          <path d="${iconPath}" fill="#5c4520" />
-        </svg>
-      </svg>
-    `;
-  }
-
-  const CAMERA_ICON_PATH = "M9 3l-1.6 2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.4L15 3H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 100 6 3 3 0 000-6z";
-  const GALLERY_ICON_PATH = "M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z";
-
-  function initMedallions() {
-    el('medallion-camera').innerHTML = buildMedallionSVG('0 0 24 24', CAMERA_ICON_PATH);
-    el('medallion-gallery').innerHTML = buildMedallionSVG('0 0 24 24', GALLERY_ICON_PATH);
-
-    // Crossing chains: each button's chain starts from the OPPOSITE side up top,
-    // so they cross in an X before reaching their medallion (matches the reference art).
+  // Crossing chains: each button's chain starts from the OPPOSITE side up top,
+  // so they cross in an X before reaching their medallion (matches the reference art).
+  function initChains() {
     const chainSvg = el('chain-cross-svg');
     chainSvg.innerHTML = `
       <line x1="120" y1="0" x2="35" y2="46" stroke="#C9A34E" stroke-width="1.8" opacity="0.85" />
       <line x1="50" y1="0" x2="135" y2="46" stroke="#C9A34E" stroke-width="1.8" opacity="0.85" />
     `;
   }
-  initMedallions();
+  initChains();
 
   // This page is shared by every client — the ?event=slug in the URL says which one.
   const urlParams = new URLSearchParams(window.location.search);
