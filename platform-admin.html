@@ -370,6 +370,7 @@
           <button class="btn-small btn-ghost" data-action="open-dashboard">Open Dashboard</button>
           <button class="btn-small btn-ghost" data-action="reset-password">Reset Password</button>
           <button class="btn-small ${isActive ? 'btn-danger' : 'btn-primary'}" data-action="toggle-status">${isActive ? 'Suspend' : 'Reactivate'}</button>
+          <button class="btn-small btn-danger" data-action="delete-client">Delete</button>
         </div>
       `;
 
@@ -381,6 +382,7 @@
       });
       card.querySelector('[data-action="reset-password"]').addEventListener('click', () => resetPassword(client.slug));
       card.querySelector('[data-action="toggle-status"]').addEventListener('click', () => toggleStatus(client.slug, isActive));
+      card.querySelector('[data-action="delete-client"]').addEventListener('click', () => deleteClient(client.slug, client.event_name));
 
       list.appendChild(card);
     });
@@ -421,6 +423,31 @@
       loadClients();
     } catch (err) {
       alert("Could not update status. Try again.");
+    }
+  }
+
+  async function deleteClient(slug, eventName) {
+    const confirmed = confirm(
+      `Permanently delete "${eventName}"?\n\n` +
+      `This removes them from your platform and deletes their pending files in Azure.\n\n` +
+      `Their Google Drive folder (their actual photos) will NOT be touched — those stay safe.\n\n` +
+      `This cannot be undone. Continue?`
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`${FUNCTION_BASE}/delete-client`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Moderator-Password': adminPassword
+        },
+        body: JSON.stringify({ slug })
+      });
+      if (!res.ok) throw new Error('Failed');
+      loadClients();
+    } catch (err) {
+      alert("Could not delete this client. Try again.");
     }
   }
 
