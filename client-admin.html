@@ -252,11 +252,11 @@
   <header>
     <h1 id="dash-event-name">Event Dashboard</h1>
     <p id="dash-event-date"></p>
+    <button id="logout-btn" style="margin-top: 10px; background: transparent; border: 1px solid var(--clay); color: var(--clay); padding: 6px 16px; font-size: 0.78rem;">Log Out</button>
   </header>
   <main>
     <div class="stats-bar">
-      <div class="stat">
-        <div class="stat-value" id="stat-count">0</div>
+      <div class="stat">        <div class="stat-value" id="stat-count">0</div>
         <div class="stat-label">Items</div>
       </div>
       <div class="stat">
@@ -276,6 +276,7 @@
 
   const urlParams = new URLSearchParams(window.location.search);
   const eventSlug = urlParams.get('event');
+  const SESSION_KEY = `client_session_${eventSlug}`;
 
   let clientPassword = "";
   let eventName = "";
@@ -289,15 +290,22 @@
     el('password-input').disabled = true;
   }
 
-  el('login-btn').addEventListener('click', attemptLogin);
+  el('login-btn').addEventListener('click', () => attemptLogin());
   el('password-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') attemptLogin(); });
   el('refresh-btn').addEventListener('click', loadGallery);
+  el('logout-btn').addEventListener('click', logout);
 
-  async function attemptLogin() {
-    const password = el('password-input').value;
+  // ---- Auto-login if this browser tab already has a valid session for this event ----
+  const savedPassword = eventSlug ? sessionStorage.getItem(SESSION_KEY) : null;
+  if (savedPassword) {
+    attemptLogin(savedPassword, true);
+  }
+
+  async function attemptLogin(passwordOverride, isAutoLogin) {
+    const password = passwordOverride !== undefined ? passwordOverride : el('password-input').value;
     el('error-msg').textContent = "";
     el('login-btn').disabled = true;
-    el('login-btn').textContent = "Checking…";
+    el('login-btn').textContent = isAutoLogin ? "Signing in…" : "Checking…";
 
     try {
       const res = await fetch(`${FUNCTION_BASE}/client-login`, {
@@ -307,6 +315,13 @@
       });
 
       if (res.status === 401 || res.status === 404) {
+        if (isAutoLogin) {
+          // Saved session is no longer valid (password changed, event removed, etc.) — clear it quietly
+          sessionStorage.removeItem(SESSION_KEY);
+          el('login-btn').disabled = false;
+          el('login-btn').textContent = "Enter";
+          return;
+        }
         const data = await res.json().catch(() => ({}));
         el('error-msg').textContent = data.error || "Login failed.";
         el('login-btn').disabled = false;
@@ -318,6 +333,7 @@
       const data = await res.json();
       clientPassword = password;
       eventName = data.event_name;
+      sessionStorage.setItem(SESSION_KEY, password);
 
       el('dash-event-name').textContent = data.event_name;
       if (data.event_date) {
@@ -331,10 +347,20 @@
       el('app').classList.add('visible');
       loadGallery();
     } catch (err) {
-      el('error-msg').textContent = "Could not reach the server. Try again.";
+      if (!isAutoLogin) {
+        el('error-msg').textContent = "Could not reach the server. Try again.";
+      }
       el('login-btn').disabled = false;
       el('login-btn').textContent = "Enter";
     }
+  }
+
+  function logout() {
+    sessionStorage.removeItem(SESSION_KEY);
+    clientPassword = "";
+    el('app').classList.remove('visible');
+    el('login-screen').style.display = 'flex';
+    el('password-input').value = '';
   }
 
   async function loadGallery() {
